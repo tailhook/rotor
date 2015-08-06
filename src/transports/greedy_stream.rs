@@ -15,7 +15,7 @@
 use std::io::{Read, Write, Error};
 use std::io::ErrorKind::{WouldBlock, Interrupted};
 
-use mio::EventSet;
+use mio::{EventSet, Token, EventLoop, PollOpt, Evented, Handler};
 use netbuf::Buf;
 
 use super::StreamSocket as Socket;
@@ -23,10 +23,10 @@ use super::super::handler::EventMachine;
 
 
 
-impl<T> Socket for T where T: Read, T: Write {}
+impl<T> Socket for T where T: Read, T: Write, T: Evented {}
 
 
-struct Stream<S: Socket> {
+struct Stream<S: Socket+Send> {
     sock: S,
     inbuf: Buf,
     outbuf: Buf,
@@ -39,11 +39,11 @@ pub struct Transport<'a> {
     outbuf: &'a mut Buf,
 }
 
-pub struct StreamMachine<S: Socket, C: Protocol>(Stream<S>, C);
+pub struct StreamMachine<S: Socket+Send, C: Protocol>(Stream<S>, C);
 
 /// This trait you should implement to handle the protocol. Only data_received
 /// handler is required, everything else may be left as is.
-pub trait Protocol: Sized {
+pub trait Protocol: Send + Sized {
     /// Some chunk of data has been received and placed into the buffer
     ///
     /// It's edge-triggered so be sure to read everything useful. But you
@@ -62,7 +62,7 @@ pub trait Protocol: Sized {
     }
 }
 
-impl<S: Socket, C: Protocol> StreamMachine<S, C> {
+impl<S: Socket+Send, C: Protocol> StreamMachine<S, C> {
     pub fn new(sock: S, proto: C) -> StreamMachine<S, C> {
         StreamMachine(Stream {
             sock: sock,
@@ -74,7 +74,7 @@ impl<S: Socket, C: Protocol> StreamMachine<S, C> {
     }
 }
 
-impl<S:Socket, C:Protocol> EventMachine for StreamMachine<S, C> {
+impl<S: Socket+Send, C:Protocol> EventMachine for StreamMachine<S, C> {
     fn ready(self, evset: EventSet) -> Option<StreamMachine<S, C>> {
         let StreamMachine(mut stream, mut fsm) = self;
         if evset.is_writable() && stream.outbuf.len() > 0 {
@@ -148,6 +148,12 @@ impl<S:Socket, C:Protocol> EventMachine for StreamMachine<S, C> {
             }
         }
         Some(StreamMachine(stream, fsm))
+    }
+
+    fn register<H:Handler>(&mut self, tok: Token, eloop: &mut EventLoop<H>)
+        -> Result<(), Error>
+    {
+        eloop.register_opt(&self.0.sock, tok, EventSet::all(), PollOpt::edge())
     }
 }
 

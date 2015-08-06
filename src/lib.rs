@@ -6,3 +6,5 @@ extern crate mio;
 
 pub mod transports;
 pub mod handler;
+
+pub use handler::{EventMachine, Handler};
