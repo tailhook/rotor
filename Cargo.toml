@@ -1,0 +1,22 @@
+[package]
+
+name = "rotor"
+description = """
+    The mio-based framework for doing I/O in simple and composable way
+"""
+license = "MIT"
+readme = "README.rst"
+keywords = ["io", "loop", "state", "machine", "mio"]
+homepage = "http://github.com/tailhook/rotor"
+version = "0.1.0"
+authors = ["paul@colomiets.name"]
+
+[dependencies]
+mio = "*"
+log = "*"
+netbuf = "0.2"
+
+[lib]
+name = "rotor"
+path = "src/lib.rs"
+
