@@ -15,6 +15,7 @@ authors = ["paul@colomiets.name"]
 mio = "*"
 log = "*"
 netbuf = "0.2"
+memchr = "*"
 
 [lib]
 name = "rotor"
