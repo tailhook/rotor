@@ -33,6 +33,16 @@ pub struct Handler<T:EventMachine> {
     slab: Slab<T>,
 }
 
+impl<T:EventMachine> Handler<T> {
+    pub fn new() -> Handler<T> {
+        // TODO(tailhook) create default config from the ulimit data instead
+        // of using real defaults
+        Handler {
+            slab: Slab::new(4096),
+        }
+    }
+}
+
 impl<T:EventMachine> mio::Handler for Handler<T> {
     type Message = Notify<T>;
     type Timeout = ();
