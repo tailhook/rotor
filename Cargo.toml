@@ -1,5 +1,4 @@
 [package]
-
 name = "rotor"
 description = """
     The mio-based framework for doing I/O in simple and composable way
@@ -12,7 +11,7 @@ version = "0.1.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-mio = "*"
+mio = { git = "git://github.com/carllerche/mio" }
 log = "*"
 netbuf = "0.2"
 memchr = "*"
