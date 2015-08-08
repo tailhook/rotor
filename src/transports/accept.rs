@@ -1,30 +1,41 @@
 use std::io::Error;
+
 use mio::{TryAccept, EventSet, Handler, Token, EventLoop, PollOpt, Evented};
 
+use context::AsyncContext;
 use {EventMachine};
 
-pub enum Serve<S:TryAccept+Send, M: EventMachine>
+pub enum Serve<S:TryAccept+Send, M>
     where M: Init<S::Output>, S: Evented
 {
     Accept(S),
     Connection(M),
 }
 
+unsafe impl<S:TryAccept+Send, M> Send for Serve<S, M>
+    where M: Init<S::Output>, S: Evented {}
+
 pub trait Init<C> {
-    fn accept(c: C) -> Self;
+    fn accept(conn: C) -> Self;
 }
 
-impl<S: TryAccept+Send, M: EventMachine> EventMachine for Serve<S, M>
-    where M: Init<S::Output>, S: Evented
+impl<S, T, C, M> EventMachine<C> for Serve<S, M>
+    where M: Init<T>,
+          M: EventMachine<C>,
+          S: Evented,
+          S: TryAccept<Output=T>+Send,
+          C: AsyncContext<Serve<S, M>>
 {
-    fn ready(self, evset: EventSet) -> Option<Self> {
+    fn ready(self, evset: EventSet, context: &mut C) -> Option<Self> {
         use self::Serve::*;
         match self {
             Accept(sock) => {
                 match sock.accept() {
                     Ok(Some(child)) => {
-                        // TODO(tailhook) create state machine and send
-                        let m: M = Init::accept(child);
+                        context.async_add_machine(
+                            Connection(Init::accept(child)))
+                        .map_err(|child| child.abort())
+                        .ok();
                     }
                     Ok(None) => {}
                     Err(e) => {
@@ -33,7 +44,7 @@ impl<S: TryAccept+Send, M: EventMachine> EventMachine for Serve<S, M>
                 }
                 Some(Accept(sock))
             }
-            Connection(c) => c.ready(evset).map(Connection),
+            Connection(c) => c.ready(evset, context).map(Connection),
         }
     }
 

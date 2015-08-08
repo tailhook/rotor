@@ -20,13 +20,14 @@ use netbuf::Buf;
 
 use super::StreamSocket as Socket;
 use super::super::handler::EventMachine;
+use super::accept::Init;
 
 
 
 impl<T> Socket for T where T: Read, T: Write, T: Evented {}
 
 
-struct Stream<S: Socket+Send> {
+struct Inner<S: Socket+Send> {
     sock: S,
     inbuf: Buf,
     outbuf: Buf,
@@ -39,11 +40,14 @@ pub struct Transport<'a> {
     outbuf: &'a mut Buf,
 }
 
-pub struct StreamMachine<S: Socket+Send, C: Protocol>(Stream<S>, C);
+pub struct Stream<S: Socket+Send, C: Protocol>(Inner<S>, C);
 
 /// This trait you should implement to handle the protocol. Only data_received
 /// handler is required, everything else may be left as is.
 pub trait Protocol: Send + Sized {
+    /// Returns new state machine in a state for new accepted connection
+    // TODO(tailhook) should socket address be passed here?
+    fn accepted() -> Self;
     /// Some chunk of data has been received and placed into the buffer
     ///
     /// It's edge-triggered so be sure to read everything useful. But you
@@ -62,21 +66,23 @@ pub trait Protocol: Send + Sized {
     }
 }
 
-impl<S: Socket+Send, C: Protocol> StreamMachine<S, C> {
-    pub fn new(sock: S, proto: C) -> StreamMachine<S, C> {
-        StreamMachine(Stream {
+impl<S: Socket+Send, P:Protocol> Init<S> for Stream<S, P>  {
+    fn accept(sock: S) -> Self {
+        Stream(Inner {
             sock: sock,
             inbuf: Buf::new(),
             outbuf: Buf::new(),
             readable: false,
-            writable: false,
-        }, proto)
+            writable: true,   // Accepted socket is immediately writable
+        }, Protocol::accepted())
     }
 }
 
-impl<S: Socket+Send, C:Protocol> EventMachine for StreamMachine<S, C> {
-    fn ready(self, evset: EventSet) -> Option<StreamMachine<S, C>> {
-        let StreamMachine(mut stream, mut fsm) = self;
+impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
+    fn ready(self, evset: EventSet, _context: &mut C)
+        -> Option<Stream<S, P>>
+    {
+        let Stream(mut stream, mut fsm) = self;
         if evset.is_writable() && stream.outbuf.len() > 0 {
             stream.writable = true;
             while stream.outbuf.len() > 0 {
@@ -147,7 +153,7 @@ impl<S: Socket+Send, C:Protocol> EventMachine for StreamMachine<S, C> {
                 }
             }
         }
-        Some(StreamMachine(stream, fsm))
+        Some(Stream(stream, fsm))
     }
 
     fn register<H:Handler>(&mut self, tok: Token, eloop: &mut EventLoop<H>)
