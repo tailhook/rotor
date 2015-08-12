@@ -12,7 +12,7 @@ pub trait AsyncContext<M:Send> {
             Err(Io(e)) => {
                 // We would probably do something better here, but mio doesn't
                 // give us a message. But anyway it's probably never happen
-                panic!("Io error when sending notify");
+                panic!("Io error when sending notify: {}", e);
             }
             Err(Full(Notify::NewMachine(m))) => Err(m),
             Err(Closed(_)) => {
