@@ -13,6 +13,7 @@
 //! elaborate protocols will be implemented in the future.
 //!
 use std::io::{Read, Write, Error};
+use std::marker::PhantomData;
 use std::io::ErrorKind::{WouldBlock, Interrupted};
 
 use mio::{EventSet, Token, EventLoop, PollOpt, Evented, Handler};
@@ -40,55 +41,59 @@ pub struct Transport<'a> {
     outbuf: &'a mut Buf,
 }
 
-pub struct Stream<S: Socket+Send, C: Protocol>(Inner<S>, C);
+pub struct Stream<S: Socket+Send, P: Protocol<C>, C>(
+    Inner<S>, P, PhantomData<*const C>);
+
+unsafe impl<S: Socket+Send, P: Protocol<C>+Send, C> Send for Stream<S, P, C> {}
 
 /// This trait you should implement to handle the protocol. Only data_received
 /// handler is required, everything else may be left as is.
-pub trait Protocol: Send + Sized {
+pub trait Protocol<C>: Send + Sized {
     /// Returns new state machine in a state for new accepted connection
     // TODO(tailhook) should socket address be passed here?
-    fn accepted() -> Self;
+    fn accepted(ctx: &mut C) -> Self;
     /// Some chunk of data has been received and placed into the buffer
     ///
     /// It's edge-triggered so be sure to read everything useful. But you
     /// can leave half-received packets in the buffer
-    fn data_received(self, transport: &mut Transport) -> Option<Self>;
+    fn data_received(self, transport: &mut Transport, ctx: &mut C)
+        -> Option<Self>;
 
     /// Eof received. State machine will shutdown unconditionally
-    fn eof_received(self) {}
+    fn eof_received(self, _ctx: &mut C) {}
 
     /// Fatal error on connection happened, you may process error somehow, but
     /// statemachine will be destroyed anyway (note you receive self)
     ///
     /// Default action is to log error on the info level
-    fn error_happened(self, e: Error) {
+    fn error_happened(self, e: Error, _ctx: &mut C) {
         info!("Error when handling connection: {}", e);
     }
 }
 
-impl<S: Socket+Send, P:Protocol> Init<S> for Stream<S, P>  {
-    fn accept(sock: S) -> Self {
+impl<S: Socket+Send, P:Protocol<C>, C> Init<S, C> for Stream<S, P, C>  {
+    fn accept(sock: S, ctx: &mut C) -> Self {
         Stream(Inner {
             sock: sock,
             inbuf: Buf::new(),
             outbuf: Buf::new(),
             readable: false,
             writable: true,   // Accepted socket is immediately writable
-        }, Protocol::accepted())
+        }, Protocol::accepted(ctx), PhantomData)
     }
 }
 
-impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
-    fn ready(self, evset: EventSet, _context: &mut C)
-        -> Option<Stream<S, P>>
+impl<S: Socket+Send, P:Protocol<C>, C> EventMachine<C> for Stream<S, P, C> {
+    fn ready(self, evset: EventSet, context: &mut C)
+        -> Option<Stream<S, P, C>>
     {
-        let Stream(mut stream, mut fsm) = self;
+        let Stream(mut stream, mut fsm, _) = self;
         if evset.is_writable() && stream.outbuf.len() > 0 {
             stream.writable = true;
             while stream.outbuf.len() > 0 {
                 match stream.outbuf.write_to(&mut stream.sock) {
                     Ok(0) => { // Connection closed
-                        fsm.eof_received();
+                        fsm.eof_received(context);
                         return None;
                     }
                     Ok(_) => {}  // May notify application
@@ -98,7 +103,7 @@ impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
                     }
                     Err(ref e) if e.kind() == Interrupted =>  { continue; }
                     Err(e) => {
-                        fsm.error_happened(e);
+                        fsm.error_happened(e, context);
                         return None;
                     }
                 }
@@ -109,14 +114,14 @@ impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
             loop {
                 match stream.inbuf.read_from(&mut stream.sock) {
                     Ok(0) => { // Connection closed
-                        fsm.eof_received();
+                        fsm.eof_received(context);
                         return None;
                     }
                     Ok(_) => {
                         fsm = match fsm.data_received(&mut Transport {
                             inbuf: &mut stream.inbuf,
                             outbuf: &mut stream.outbuf,
-                        }) {
+                        }, context) {
                             Some(fsm) => fsm,
                             None => return None,
                         };
@@ -127,7 +132,7 @@ impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
                     }
                     Err(ref e) if e.kind() == Interrupted =>  { continue; }
                     Err(e) => {
-                        fsm.error_happened(e);
+                        fsm.error_happened(e, context);
                         return None;
                     }
                 }
@@ -137,7 +142,7 @@ impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
             while stream.outbuf.len() > 0 {
                 match stream.outbuf.write_to(&mut stream.sock) {
                     Ok(0) => { // Connection closed
-                        fsm.eof_received();
+                        fsm.eof_received(context);
                         return None;
                     }
                     Ok(_) => {}  // May notify application
@@ -147,13 +152,13 @@ impl<S: Socket+Send, P:Protocol, C> EventMachine<C> for Stream<S, P> {
                     }
                     Err(ref e) if e.kind() == Interrupted =>  { continue; }
                     Err(e) => {
-                        fsm.error_happened(e);
+                        fsm.error_happened(e, context);
                         return None;
                     }
                 }
             }
         }
-        Some(Stream(stream, fsm))
+        Some(Stream(stream, fsm, PhantomData))
     }
 
     fn register<H:Handler>(&mut self, tok: Token, eloop: &mut EventLoop<H>)
