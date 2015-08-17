@@ -1,7 +1,8 @@
 use std::io::Error;
 use std::marker::PhantomData;
 
-use mio::{TryAccept, EventSet, Handler, Token, EventLoop, PollOpt, Evented};
+use mio::TryAccept;
+use mio::{EventSet, Handler, Token, EventLoop, PollOpt, Evented};
 
 use context::AsyncContext;
 use {EventMachine};
