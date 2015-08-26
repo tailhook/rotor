@@ -11,3 +11,4 @@ pub mod buffer_util;
 pub mod context;
 
 pub use handler::{EventMachine, Handler};
+pub use context::{send_machine};

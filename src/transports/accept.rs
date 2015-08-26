@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use mio::TryAccept;
 use mio::{EventSet, Handler, Token, EventLoop, PollOpt, Evented};
 
-use context::AsyncContext;
+use context::AsyncAddMachine;
 use {EventMachine};
 
 pub enum Serve<S:TryAccept+Send, M, C>
@@ -26,7 +26,7 @@ impl<S, T, C, M> EventMachine<C> for Serve<S, M, C>
           M: EventMachine<C>,
           S: Evented,
           S: TryAccept<Output=T>+Send,
-          C: AsyncContext<Serve<S, M, C>>
+          C: AsyncAddMachine<Serve<S, M, C>>
 {
     fn ready(self, evset: EventSet, context: &mut C) -> Option<Self> {
         use self::Serve::*;
@@ -69,7 +69,7 @@ impl<S, T, C, M> Serve<S, M, C>
           M: EventMachine<C>,
           S: Evented,
           S: TryAccept<Output=T>+Send,
-          C: AsyncContext<Serve<S, M, C>>
+          C: AsyncAddMachine<Serve<S, M, C>>
 {
     pub fn new(sock: S) -> Self {
         Serve::Accept(sock, PhantomData)
