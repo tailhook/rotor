@@ -16,14 +16,14 @@ use std::io::{Read, Write, Error};
 use std::marker::PhantomData;
 use std::io::ErrorKind::{WouldBlock, Interrupted};
 
-use mio::{EventSet, Token, EventLoop, PollOpt, Evented, Handler};
+use mio::{EventSet, PollOpt, Evented};
 use netbuf::Buf;
 
 use super::StreamSocket as Socket;
 use super::super::handler::EventMachine;
 use super::accept::Init;
 
-
+use Scope;
 
 impl<T> Socket for T where T: Read, T: Write, T: Evented {}
 
@@ -71,21 +71,30 @@ pub trait Protocol<C>: Send + Sized {
     }
 }
 
-impl<S: Socket+Send, P:Protocol<C>, C> Init<S, C> for Stream<S, P, C>  {
-    fn accept(sock: S, ctx: &mut C) -> Self {
+impl<T, P, C> Init<T, C> for Stream<T, P, C>
+    where T: Socket+Send, P: Protocol<C>
+{
+    fn accept<'x, S>(conn: T, context: &mut C, _scope: &mut S)
+        -> Self
+        where S: 'x, S: Scope<Self, Self::Timeout>
+    {
         Stream(Inner {
-            sock: sock,
+            sock: conn,
             inbuf: Buf::new(),
             outbuf: Buf::new(),
             readable: false,
             writable: true,   // Accepted socket is immediately writable
-        }, Protocol::accepted(ctx), PhantomData)
+        }, Protocol::accepted(context), PhantomData)
     }
 }
 
-impl<S: Socket+Send, P:Protocol<C>, C> EventMachine<C> for Stream<S, P, C> {
-    fn ready(self, evset: EventSet, context: &mut C)
-        -> Option<Stream<S, P, C>>
+impl<T, P, Ctx> EventMachine<Ctx> for Stream<T, P, Ctx>
+    where T: Socket+Send, P: Protocol<Ctx>
+{
+    type Timeout=();
+    fn ready<'x, S>(self, evset: EventSet, context: &mut Ctx, _scope: &mut S)
+        -> Option<Stream<T, P, Ctx>>
+        where S: 'x, S: Scope<Self, Self::Timeout>
     {
         let Stream(mut stream, mut fsm, _) = self;
         if evset.is_writable() && stream.outbuf.len() > 0 {
@@ -161,10 +170,11 @@ impl<S: Socket+Send, P:Protocol<C>, C> EventMachine<C> for Stream<S, P, C> {
         Some(Stream(stream, fsm, PhantomData))
     }
 
-    fn register<H:Handler>(&mut self, tok: Token, eloop: &mut EventLoop<H>)
+    fn register<'x, S>(&mut self, scope: &mut S)
         -> Result<(), Error>
+        where S: 'x, S: Scope<Self, Self::Timeout>
     {
-        eloop.register_opt(&self.0.sock, tok, EventSet::all(), PollOpt::edge())
+        scope.register(&self.0.sock, EventSet::all(), PollOpt::edge())
     }
 }
 
