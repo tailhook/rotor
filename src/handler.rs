@@ -43,10 +43,6 @@ pub trait EventMachine<C>: Send + Sized {
         where S: 'x, S: Scope<Self, Self::Timeout>;
 
     /// Gives socket a chance to register in event loop
-    ///
-    /// Keep in mind that there are no reregister or any other kind of modify
-    /// operation. So it's mostly useful for registering all events in
-    /// edge-triggered mode
     fn register<'x, S>(&mut self, scope: &mut S)
         -> Result<(), Error>
         where S: 'x, S: Scope<Self, Self::Timeout>;
