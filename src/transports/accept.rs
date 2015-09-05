@@ -24,9 +24,9 @@ unsafe impl<S:TryAccept+Send, M, Ctx> Send for Serve<S, M, Ctx>
 {}
 
 pub trait Init<T, C>: EventMachine<C> {
-    fn accept<'x, S>(conn: T, context: &mut C, scope: &mut S)
+    fn accept<S>(conn: T, context: &mut C, scope: &mut S)
         -> Self
-        where S: 'x, S: Scope<Self, Self::Timeout>;
+        where S: Scope<Self, Self::Timeout>;
 }
 
 struct ScopeProxy<'a, S: 'a, A, C>(&'a mut S, PhantomData<*const (A, C)>);
@@ -67,9 +67,9 @@ impl<S, M, Ctx> EventMachine<Ctx> for Serve<S, M, Ctx>
           S: TryAccept + Send,
 {
     type Timeout = M::Timeout;
-    fn ready<'x, Sc>(self, evset: EventSet, context: &mut Ctx, scope: &mut Sc)
+    fn ready<Sc>(self, evset: EventSet, context: &mut Ctx, scope: &mut Sc)
         -> Option<Self>
-        where Sc: 'x, Sc: Scope<Self, Self::Timeout>
+        where Sc: Scope<Self, Self::Timeout>
     {
         use self::Serve::*;
         match self {
@@ -96,9 +96,9 @@ impl<S, M, Ctx> EventMachine<Ctx> for Serve<S, M, Ctx>
                 .map(Connection),
         }
     }
-    fn register<'x, Sc>(&mut self, scope: &mut Sc)
+    fn register<Sc>(&mut self, scope: &mut Sc)
         -> Result<(), Error>
-        where Sc: 'x, Sc: Scope<Self, Self::Timeout>
+        where Sc: Scope<Self, Self::Timeout>
     {
         use self::Serve::*;
         match self {

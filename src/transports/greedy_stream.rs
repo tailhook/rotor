@@ -74,9 +74,9 @@ pub trait Protocol<C>: Send + Sized {
 impl<T, P, C> Init<T, C> for Stream<T, P, C>
     where T: Socket+Send, P: Protocol<C>
 {
-    fn accept<'x, S>(conn: T, context: &mut C, _scope: &mut S)
+    fn accept<S>(conn: T, context: &mut C, _scope: &mut S)
         -> Self
-        where S: 'x, S: Scope<Self, Self::Timeout>
+        where S: Scope<Self, Self::Timeout>
     {
         Stream(Inner {
             sock: conn,
@@ -92,9 +92,9 @@ impl<T, P, Ctx> EventMachine<Ctx> for Stream<T, P, Ctx>
     where T: Socket+Send, P: Protocol<Ctx>
 {
     type Timeout=();
-    fn ready<'x, S>(self, evset: EventSet, context: &mut Ctx, _scope: &mut S)
+    fn ready<S>(self, evset: EventSet, context: &mut Ctx, _scope: &mut S)
         -> Option<Stream<T, P, Ctx>>
-        where S: 'x, S: Scope<Self, Self::Timeout>
+        where S: Scope<Self, Self::Timeout>
     {
         let Stream(mut stream, mut fsm, _) = self;
         if evset.is_writable() && stream.outbuf.len() > 0 {
@@ -170,9 +170,9 @@ impl<T, P, Ctx> EventMachine<Ctx> for Stream<T, P, Ctx>
         Some(Stream(stream, fsm, PhantomData))
     }
 
-    fn register<'x, S>(&mut self, scope: &mut S)
+    fn register<S>(&mut self, scope: &mut S)
         -> Result<(), Error>
-        where S: 'x, S: Scope<Self, Self::Timeout>
+        where S: Scope<Self, Self::Timeout>
     {
         scope.register(&self.0.sock, EventSet::all(), PollOpt::edge())
     }

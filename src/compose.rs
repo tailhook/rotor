@@ -76,10 +76,10 @@ macro_rules! rotor_compose_state_machines {
             type Timeout = $name<$(
                 <$subtype as rotor::EventMachine<$context>>::Timeout
             ),*>;
-            fn ready<'x, S>(self, events: ::mio::EventSet,
+            fn ready<S>(self, events: ::mio::EventSet,
                 context: &mut $context, scope: &mut S)
                 -> Option<Self>
-                where S: 'x, S: $crate::Scope<Self, Self::Timeout>
+                where S: $crate::Scope<Self, Self::Timeout>
             {
                 match self {
                     $(
@@ -89,9 +89,9 @@ macro_rules! rotor_compose_state_machines {
                     )*
                 }
             }
-            fn register<'x, S>(&mut self, scope: &mut S)
+            fn register<S>(&mut self, scope: &mut S)
                 -> Result<(), ::std::io::Error>
-                where S: 'x, S: $crate::Scope<Self, Self::Timeout>
+                where S: $crate::Scope<Self, Self::Timeout>
             {
                 match self {
                     $(

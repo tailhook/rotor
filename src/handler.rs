@@ -38,18 +38,18 @@ pub trait EventMachine<C>: Send + Sized {
 
 
     /// Socket readiness notification
-    fn ready<'x, S>(self, events: EventSet, context: &mut C, scope: &mut S)
+    fn ready<S>(self, events: EventSet, context: &mut C, scope: &mut S)
         -> Option<Self>
-        where S: 'x, S: Scope<Self, Self::Timeout>;
+        where S: Scope<Self, Self::Timeout>;
 
     /// Gives socket a chance to register in event loop
-    fn register<'x, S>(&mut self, scope: &mut S)
+    fn register<S>(&mut self, scope: &mut S)
         -> Result<(), Error>
-        where S: 'x, S: Scope<Self, Self::Timeout>;
+        where S: Scope<Self, Self::Timeout>;
 
     /// Abnormal termination of event machine
-    fn abort<'x, S>(self, reason: Abort, _context: &mut C, _scope: &mut S)
-        where S: 'x, S: Scope<Self, Self::Timeout>
+    fn abort<S>(self, reason: Abort, _context: &mut C, _scope: &mut S)
+        where S: Scope<Self, Self::Timeout>
     {
         // TODO(tailhook) use Display instead of Debug
         error!("Connection aborted: {:?}", reason);
