@@ -23,7 +23,7 @@ use super::StreamSocket as Socket;
 use super::super::handler::EventMachine;
 use super::accept::Init;
 
-use Scope;
+use {Scope, BaseMachine};
 
 impl<T> Socket for T where T: Read, T: Write, T: Evented {}
 
@@ -48,7 +48,7 @@ unsafe impl<S: Socket+Send, P: Protocol<C>+Send, C> Send for Stream<S, P, C> {}
 
 /// This trait you should implement to handle the protocol. Only data_received
 /// handler is required, everything else may be left as is.
-pub trait Protocol<C>: Send + Sized {
+pub trait Protocol<C>: BaseMachine + Send + Sized {
     /// Returns new state machine in a state for new accepted connection
     // TODO(tailhook) should socket address be passed here?
     fn accepted(ctx: &mut C) -> Self;
@@ -76,7 +76,7 @@ impl<T, P, C> Init<T, C> for Stream<T, P, C>
 {
     fn accept<S>(conn: T, context: &mut C, _scope: &mut S)
         -> Self
-        where S: Scope<Self, Self::Timeout>
+        where S: Scope<Self>
     {
         Stream(Inner {
             sock: conn,
@@ -87,14 +87,18 @@ impl<T, P, C> Init<T, C> for Stream<T, P, C>
         }, Protocol::accepted(context), PhantomData)
     }
 }
+impl<T, P, Ctx> BaseMachine for Stream<T, P, Ctx>
+    where T: Socket+Send, P: Protocol<Ctx>
+{
+    type Timeout = P::Timeout;
+}
 
 impl<T, P, Ctx> EventMachine<Ctx> for Stream<T, P, Ctx>
     where T: Socket+Send, P: Protocol<Ctx>
 {
-    type Timeout=();
     fn ready<S>(self, evset: EventSet, context: &mut Ctx, _scope: &mut S)
         -> Option<Stream<T, P, Ctx>>
-        where S: Scope<Self, Self::Timeout>
+        where S: Scope<Self>
     {
         let Stream(mut stream, mut fsm, _) = self;
         if evset.is_writable() && stream.outbuf.len() > 0 {
@@ -172,7 +176,7 @@ impl<T, P, Ctx> EventMachine<Ctx> for Stream<T, P, Ctx>
 
     fn register<S>(&mut self, scope: &mut S)
         -> Result<(), Error>
-        where S: Scope<Self, Self::Timeout>
+        where S: Scope<Self>
     {
         scope.register(&self.0.sock, EventSet::all(), PollOpt::edge())
     }

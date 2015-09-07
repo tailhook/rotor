@@ -5,7 +5,7 @@ use mio::TryAccept;
 use mio::{EventSet, Handler, PollOpt, Evented};
 use mio::{Timeout, TimerError};
 
-use {EventMachine, Scope};
+use {BaseMachine, EventMachine, Scope};
 use handler::Abort::MachineAddError;
 
 pub enum Serve<S, M, Ctx>
@@ -26,13 +26,13 @@ unsafe impl<S:TryAccept+Send, M, Ctx> Send for Serve<S, M, Ctx>
 pub trait Init<T, C>: EventMachine<C> {
     fn accept<S>(conn: T, context: &mut C, scope: &mut S)
         -> Self
-        where S: Scope<Self, Self::Timeout>;
+        where S: Scope<Self>;
 }
 
 struct ScopeProxy<'a, S: 'a, A, C>(&'a mut S, PhantomData<*const (A, C)>);
 
-impl<'a, M, T, S, A, C> Scope<M, T> for ScopeProxy<'a, S, A, C>
-    where S: Scope<Serve<A, M, C>, T> + 'a,
+impl<'a, M, S, A, C> Scope<M> for ScopeProxy<'a, S, A, C>
+    where S: Scope<Serve<A, M, C>> + 'a,
           A: TryAccept+Send, A: Evented,
           M: Init<A::Output, C>,
 {
@@ -44,7 +44,7 @@ impl<'a, M, T, S, A, C> Scope<M, T> for ScopeProxy<'a, S, A, C>
             unreachable!();
         })
     }
-    fn add_timeout_ms(&mut self, delay: u64, t: T)
+    fn add_timeout_ms(&mut self, delay: u64, t: M::Timeout)
         -> Result<Timeout, TimerError>
     {
         self.0.add_timeout_ms(delay, t)
@@ -59,6 +59,14 @@ impl<'a, M, T, S, A, C> Scope<M, T> for ScopeProxy<'a, S, A, C>
         self.0.register(io, interest, opt)
     }
 }
+impl<S, M, Ctx> BaseMachine for Serve<S, M, Ctx>
+    where M: Init<S::Output, Ctx>,
+          M: EventMachine<Ctx>,
+          S: Evented,
+          S: TryAccept + Send,
+{
+    type Timeout = M::Timeout;
+}
 
 impl<S, M, Ctx> EventMachine<Ctx> for Serve<S, M, Ctx>
     where M: Init<S::Output, Ctx>,
@@ -66,10 +74,9 @@ impl<S, M, Ctx> EventMachine<Ctx> for Serve<S, M, Ctx>
           S: Evented,
           S: TryAccept + Send,
 {
-    type Timeout = M::Timeout;
     fn ready<Sc>(self, evset: EventSet, context: &mut Ctx, scope: &mut Sc)
         -> Option<Self>
-        where Sc: Scope<Self, Self::Timeout>
+        where Sc: Scope<Self>
     {
         use self::Serve::*;
         match self {
@@ -98,7 +105,7 @@ impl<S, M, Ctx> EventMachine<Ctx> for Serve<S, M, Ctx>
     }
     fn register<Sc>(&mut self, scope: &mut Sc)
         -> Result<(), Error>
-        where Sc: Scope<Self, Self::Timeout>
+        where Sc: Scope<Self>
     {
         use self::Serve::*;
         match self {

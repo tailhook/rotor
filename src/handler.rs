@@ -5,7 +5,7 @@ use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt};
 use mio::util::Slab;
 use mio::{Sender, Timeout, TimerError};
 
-use Scope;
+use {Scope, BaseMachine};
 
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -33,23 +33,20 @@ pub struct Handler<Ctx, M: Send> {
     channel: Sender<Notify<M>>,
 }
 
-pub trait EventMachine<C>: Send + Sized {
-    type Timeout;
-
-
+pub trait EventMachine<C>: BaseMachine + Send + Sized {
     /// Socket readiness notification
     fn ready<S>(self, events: EventSet, context: &mut C, scope: &mut S)
         -> Option<Self>
-        where S: Scope<Self, Self::Timeout>;
+        where S: Scope<Self>;
 
     /// Gives socket a chance to register in event loop
     fn register<S>(&mut self, scope: &mut S)
         -> Result<(), Error>
-        where S: Scope<Self, Self::Timeout>;
+        where S: Scope<Self>;
 
     /// Abnormal termination of event machine
     fn abort<S>(self, reason: Abort, _context: &mut C, _scope: &mut S)
-        where S: Scope<Self, Self::Timeout>
+        where S: Scope<Self>
     {
         // TODO(tailhook) use Display instead of Debug
         error!("Connection aborted: {:?}", reason);
@@ -72,7 +69,7 @@ impl<C, M:Send> Handler<C, M>
     }
 }
 
-impl<'a, C, M> Scope<M, M::Timeout> for RootScope<'a, Handler<C, M>>
+impl<'a, C, M> Scope<M> for RootScope<'a, Handler<C, M>>
     where M: 'a, M: EventMachine<C>,
           M::Timeout: 'a,
 {

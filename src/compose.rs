@@ -31,12 +31,9 @@ macro_rules! rotor_compose_state_machines {
     };
     (SCOPE_IMPL $name:ident $context:ty { $cursub:ident $curtyp:ty }
         $($subname:ident/$subtype:ty)*) => {
-        impl<'a, S> $crate::Scope<$curtyp,
-                    <$curtyp as $crate::EventMachine<$context>>::Timeout>
+        impl<'a, S> $crate::Scope<$curtyp>
             for scope::$cursub<'a, S>
-            where S: $crate::Scope<
-                $name<$($subtype),*>,
-                $name<$(<$subtype as $crate::EventMachine<$context>>::Timeout),*>> + 'a,
+            where S: $crate::Scope<$name<$($subtype),*>> + 'a,
         {
             fn async_add_machine(&mut self, m: $curtyp) -> Result<(), $curtyp> {
                 self.0.async_add_machine($name::$cursub(m))
@@ -47,7 +44,7 @@ macro_rules! rotor_compose_state_machines {
                 })
             }
             fn add_timeout_ms(&mut self, delay: u64,
-                t: <$curtyp as $crate::EventMachine<$context>>::Timeout)
+                t: <$curtyp as $crate::BaseMachine>::Timeout)
                 -> Result<::mio::Timeout, ::mio::TimerError>
             {
                 self.0.add_timeout_ms(delay, $name::$cursub(t))
@@ -72,14 +69,16 @@ macro_rules! rotor_compose_state_machines {
         rotor_compose_state_machines!(STRUCT_REPEAT $name $context
             [ $($subname / $subtype)* ] [ $($subname / $subtype)* ]);
 
-        impl $crate::EventMachine<$context> for $name<$($subtype),*> {
+        impl $crate::BaseMachine for $name<$($subtype),*> {
             type Timeout = $name<$(
-                <$subtype as rotor::EventMachine<$context>>::Timeout
+                <$subtype as $crate::BaseMachine>::Timeout
             ),*>;
+        }
+        impl $crate::EventMachine<$context> for $name<$($subtype),*> {
             fn ready<S>(self, events: ::mio::EventSet,
                 context: &mut $context, scope: &mut S)
                 -> Option<Self>
-                where S: $crate::Scope<Self, Self::Timeout>
+                where S: $crate::Scope<Self>
             {
                 match self {
                     $(
@@ -91,7 +90,7 @@ macro_rules! rotor_compose_state_machines {
             }
             fn register<S>(&mut self, scope: &mut S)
                 -> Result<(), ::std::io::Error>
-                where S: $crate::Scope<Self, Self::Timeout>
+                where S: $crate::Scope<Self>
             {
                 match self {
                     $(
