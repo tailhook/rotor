@@ -46,7 +46,7 @@ Performance on newer desktop class CPU (i7-4790K CPU @ 4.00GHz)::
     Requests/sec: 181781.96
     Transfer/sec:     15.26MB
 
-Note: both benchmarks are **single threaded**.
+Note: both benchmarks are run on **single threaded** server.
 
 The bencmarks are too early (not a full implementation of HTTP), so no
 comparison bencmarks listed here.
