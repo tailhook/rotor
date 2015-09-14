@@ -16,6 +16,13 @@ Features:
   without memory/resource leaks
 * Easy to combine multiple libraries into single mio event loop
 
+Resources
+=========
+
+* `Asynchronous IO in Rust`__ (random design notes about this library)
+
+.. __: https://medium.com/@paulcolomiets/asynchronous-io-in-rust-36b623e7b965
+
 
 Benchmarks
 ==========
