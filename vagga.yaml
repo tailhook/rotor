@@ -1,0 +1,55 @@
+commands:
+
+  make: !Command
+    description: Build rotor library
+    container: ubuntu
+    run: [cargo, build]
+
+  test: !Command
+    description: Run unit tests
+    container: ubuntu
+    run: [cargo, test]
+
+  cargo: !Command
+    description: Run any cargo command
+    container: ubuntu
+    run: [cargo]
+
+  doc: !Command
+    description: Build sphinx documentation
+    container: docs
+    run: [make, html]
+    work-dir: doc
+    epilog: |
+      --------------------------------------------------
+      Documentation is now at doc/_build/html/index.html
+
+  doc-api: !Command
+    description: Build API documentation (rustdoc)
+    container: ubuntu
+    run: [cargo, doc]
+    epilog: |
+      ---------------------------------------------------
+      Documentation is now at target/doc/rotor/index.html
+
+containers:
+
+  ubuntu:
+    setup:
+    - !Ubuntu trusty
+    - !UbuntuUniverse ~
+    - !Install [make, checkinstall, wget, ca-certificates,
+                libssl-dev, build-essential]
+
+    - !TarInstall
+      url: "http://static.rust-lang.org/dist/rust-1.3.0-x86_64-unknown-linux-gnu.tar.gz"
+      script: "./install.sh --prefix=/usr --components=rustc,cargo"
+
+    environ:
+      HOME: /work/target
+
+  docs:
+    setup:
+    - !Alpine v3.2
+    - !Install [alpine-base, py-sphinx, make]
+    - !Py2Requirements doc/requirements.txt

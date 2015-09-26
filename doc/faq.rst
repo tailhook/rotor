@@ -1,17 +1,5 @@
 # FAQ
 
-## What is a State Machine?
-
-You probably know [the theory][wiki:sm]. In this docs when we refer to state
-machine we refer to a type (most of the time the enum) that implements some
-trait designed according to the rules below. There is some [introductory
-article about why state machines are designed that way][aio-article].
-
-Rules: TBD
-
-[wiki:sm]: https://en.wikipedia.org/wiki/State_machine
-[aio-article]: https://medium.com/@paulcolomiets/asynchronous-io-in-rust-36b623e7b965
-
 ## What's difference between Context and Scope?
 
 Here is rule of thumb:

@@ -8,15 +8,6 @@ rust:
 sudo: false
 env:
   secure: "B2ccsEzUfGU486O4YFv4dLr2oMeZJmBBv6cG1rdFiPkPccpbe0bSF9NMg2afIUZcOeOgzdF4V0JLyqf5ckx78VsbcWV1Di5DqJ8hnSdaw51+o5wu8YMjdx4eDDtLxVIWEnEus+11v9pJjoRxL/6+JzYaGD1vUZ2iu80mZiGCaAA2P1pXIdRZLWrt2S3sDRmkoMS0SIi5pEElFQ4RNiOWS6mcyNXUY34bAQv7F2J1J2l+N+ZyuuhaDdlx5xI2xDTdtVP1Jj1wf8e4SmVzqg9Ucovjfjpol9AP34r8dEU6A86LnVkNTmFj8Ts4Qy344+TlEGZ+37KaIqAGYQe35wawxYQizo2Y0IXfuH5NFJp514l4RxNeSs5MUamhIshxRljmD3DaNrKkyu7rCpB/z3dnFfJYLNOrpX9XBQTWtoWmW7RSHp6IDdvbLP/IyT8KNOiufED7RIgT4rbqK/wfunVHPVf4wsserTyBAvYd/wMwTMR+uwoSbfdiIY0FwmtWovBbJMRLwRDZV+8nQ2puT5FFuwleoOgPNaoc/tzGkS1ErCBQVaLo6zbKCKBLQiEBoFFn3YDUuA0Hay/Eu8l7etpKj92rnFn1FRTH+3h0+z6C2e+uN4qMg6W/tBc0jKP3WGrBqfj1hMNxEXYOjGWt24GmjeMsAjYqwjdfpjXTjuPgsjM="
-install:
-- |
-  if [ $TRAVIS_BRANCH = master ]; then
-    pushd /tmp
-    git clone git://github.com/azerupi/mdBook.git mdbook
-    cd mdbook
-    cargo build
-    popd
-  fi
 script:
 - cargo build --verbose
 # don't run doc tests because they don't run well for macros
@@ -26,8 +17,7 @@ after_success: |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
   cargo doc &&
-  /tmp/mdbook/target/debug/mdbook build &&
-  cp -R book/* target/doc/ &&
+  echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2 | tr '-' '_'`/index.html>" > target/doc/index.html &&
   pip install ghp-import --user &&
   ~/.local/bin/ghp-import -n target/doc &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages

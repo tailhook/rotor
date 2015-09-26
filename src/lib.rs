@@ -1,3 +1,7 @@
+//! The mio-based framework for doing I/O in simple and composable way
+//!
+//! More documentation in [the guide](http://rotor.readthedocs.org)
+//!
 #![crate_name="rotor"]
 
 extern crate netbuf;

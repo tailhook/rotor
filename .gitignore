@@ -2,4 +2,4 @@
 /run
 /.vagga
 /Cargo.lock
-/book
+/doc/_build
