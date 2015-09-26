@@ -1,6 +1,12 @@
-# FAQ
+===
+FAQ
+===
 
-## What's difference between Context and Scope?
+Library Design
+==============
+
+What's difference between Context and Scope?
+--------------------------------------------
 
 Here is rule of thumb:
 
