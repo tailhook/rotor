@@ -19,13 +19,11 @@ use std::io::ErrorKind::{WouldBlock, Interrupted};
 use mio::{EventSet, PollOpt, Evented};
 use netbuf::Buf;
 
-use super::StreamSocket as Socket;
 use super::super::handler::EventMachine;
 use super::accept::Init;
 
 use {Scope, BaseMachine};
 
-impl<T> Socket for T where T: Read, T: Write, T: Evented {}
 
 
 struct Inner<S: Socket+Send> {

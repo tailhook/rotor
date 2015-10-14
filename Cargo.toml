@@ -11,10 +11,11 @@ version = "0.2.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-mio = ">= 0.4.2"
-log = "*"
+mio = "0.4.2"
+log = "0.3.2"
 netbuf = "0.2"
-memchr = "*"
+memchr = "0.1.6"
+time = "0.1.23"
 
 [lib]
 name = "rotor"

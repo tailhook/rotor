@@ -2,8 +2,8 @@ use std::io::{Read, Write};
 
 use mio::Evented;
 
-pub mod greedy_stream;
-pub mod accept;
+pub mod stream;
 
 pub trait StreamSocket: Read + Write + Evented {}
+impl<T> StreamSocket for T where T: Read, T: Write, T: Evented {}
 
