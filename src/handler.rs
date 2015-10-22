@@ -1,3 +1,4 @@
+use std::cmp::max;
 use std::io::Error;
 use std::usize;
 
@@ -7,7 +8,7 @@ use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt};
 use mio::util::Slab;
 use mio::{Sender, TimerError};
 
-use {Async, BaseMachine};
+use {Async};
 
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -17,16 +18,18 @@ pub enum Abort {
     MachineAddError,
 }
 
-pub enum Notify<T> {
-    NewMachine(T),
-}
-
 pub enum Timeo {
     Fsm(Token),
 }
 
+pub enum Notify {
+    Fsm(Token),
+}
+
+pub struct Cell<M:Sized>(M, Option<(SteadyTime, mio::Timeout)>);
+
 pub struct Handler<Ctx, M> {
-    slab: Slab<M>,
+    slab: Slab<Cell<M>>,
     context: Ctx,
 }
 
@@ -50,16 +53,19 @@ impl<'a, H> Registrator for Reg<'a, H>
     }
 }
 
-pub trait EventMachine<C>: BaseMachine {
+pub trait EventMachine<C> {
     /// Socket readiness notification
     fn ready(self, events: EventSet, context: &mut C)
         -> Async<Self, Option<Self>>;
 
     /// Gives socket a chance to register in event loop
-    fn register(&mut self, reg: &mut Registrator);
+    fn register(self, reg: &mut Registrator) -> Async<Self, ()>;
 
     /// Timeout happened
-    fn timeout(&mut self) -> Async<Self, Option<Self>>;
+    fn timeout(self, context: &mut C) -> Async<Self, Option<Self>>;
+
+    /// Message received
+    fn wakeup(self, context: &mut C) -> Async<Self, Option<Self>>;
 }
 
 impl<C, M> Handler<C, M>
@@ -77,39 +83,67 @@ impl<C, M> Handler<C, M>
     }
 }
 
-impl<'a, Ctx, M> mio::Handler for Handler<Ctx, M>
+fn replacement<M, C, R>(ares: Async<M, R>, eloop: &mut EventLoop<Handler<C, M>>,
+    token: Token, old_timer: Option<(SteadyTime, mio::Timeout)>)
+    -> (Option<Cell<M>>, Option<R>)
+    where M:Sized, M:EventMachine<C>, R:Sized
+{
+    use async::Async::*;
+    match ares {
+        Continue(m, result) => {
+            if let Some((_, ticket)) = old_timer {
+                eloop.clear_timeout(ticket);
+            }
+            (Some(Cell(m, None)), Some(result))
+        }
+        Stop => (None, None),
+        Timeout(m, deadline) => {
+            let mut ticket = match old_timer {
+                Some((dl, t)) if dl == deadline => Some(t),
+                Some((_, ticket)) => {
+                    eloop.clear_timeout(ticket);
+                    None
+                }
+                None => None,
+            };
+            let ticket = ticket.unwrap_or_else(|| {
+                let left = deadline - SteadyTime::now();
+                eloop.timeout_ms(
+                        Timeo::Fsm(token),
+                        max(left.num_milliseconds(), 0) as u64,
+                    ).ok().expect("No more timer slots?")
+            });
+            (Some(Cell(m, Some((deadline, ticket)))), None)
+        }
+    }
+}
+
+impl<'a, Ctx, M> Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
-    type Message = (Token, M::Message);
-    type Timeout = Timeo;
-    fn ready<'x>(&mut self, eloop: &'x mut EventLoop<Self>,
-        token: Token, events: EventSet)
+    fn action_loop<'x, F>(&mut self, token: Token,
+        eloop: &'x mut EventLoop<Self>, fun: F)
+        where F: Fn(M, &mut Ctx) -> Async<M, Option<M>>,
     {
-        use async::Async::*;
         let ref mut ctx = self.context;
         loop {
             let mut new_machine = None;
-            self.slab.replace_with(token, |fsm| {
-                match fsm.ready(events, ctx) {
-                    Continue(m, new) => {
-                        new_machine = new;
-                        Some(m)
-                    }
-                    Stop => None,
-                    Timeout(m, timeo) => {
-                        Some(m)
-                    }
-                }
+            self.slab.replace_with(token, |Cell(m, timer)| {
+                let mach = fun(m, ctx);
+                let (cell, res) = replacement(mach, eloop, token, timer);
+                new_machine = res.and_then(|r| r);
+                cell
             }).ok();  // Spurious events are ok in mio
             if let Some(new) = new_machine {
-                match self.slab.insert(new) {
+                match self.slab.insert(Cell(new, None)) {
                     Ok(tok) => {
-                        self.slab.get_mut(tok).map(|fsm| {
-                            fsm.register(&mut Reg {
+                        self.slab.replace_with(tok, |Cell(m, timer)| {
+                            let mach = m.register(&mut Reg {
                                 eloop: eloop,
                                 token: tok
                                 });
-                        });
+                            replacement(mach, eloop, token, timer).0
+                        }).unwrap(); // just inserted so must work
                     }
                     Err(_) => {
                         unimplemented!();
@@ -120,32 +154,34 @@ impl<'a, Ctx, M> mio::Handler for Handler<Ctx, M>
             }
         }
     }
+}
 
-    fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Self::Message) {
-        /*
-        use self::Notify::*;
-        let ref mut ctx = self.context;
+impl<'a, Ctx, M> mio::Handler for Handler<Ctx, M>
+    where M: EventMachine<Ctx>
+{
+    type Message = Notify;
+    type Timeout = Timeo;
+    fn ready<'x>(&mut self, eloop: &'x mut EventLoop<Self>,
+        token: Token, events: EventSet)
+    {
+        self.action_loop(token, eloop, |m, ctx| m.ready(events, ctx));
+    }
+
+    fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Notify) {
         match msg {
-            NewMachine(fsm) => {
-                // This is so complex because of limitations of Slab
-                match self.slab.insert(fsm) {
-                    Ok(tok) => {
-                        self.slab.replace_with(tok, |mut fsm| {
-                            fsm.register(&mut Reg {
-                                eloop: eloop,
-                                token: tok
-                                });
-                            Some(fsm)
-                        }).unwrap();
-                    }
-                    Err(fsm) => {
-                        unimplemented!(); // Too many state machines"
-                    }
-                }
+            Notify::Fsm(token) => {
+                self.action_loop(token, eloop, |m, ctx| m.wakeup(ctx));
             }
         }
-        */
-        unimplemented!();
+    }
+
+    fn timeout(&mut self, eloop: &mut EventLoop<Self>, timeo: Timeo) {
+        match timeo {
+            Timeo::Fsm(token) => {
+                self.action_loop(token, eloop, |m, ctx| m.wakeup(ctx));
+            }
+        }
+
     }
 }
 

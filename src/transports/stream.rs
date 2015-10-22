@@ -37,11 +37,16 @@ impl<C, S: Socket, P: Protocol<S, C>> EventMachine<C> for Stream<C, S, P> {
         unimplemented!();
     }
 
-    fn register(&mut self, reg: &mut Registrator) {
+    fn register(self, reg: &mut Registrator) -> Async<Self, ()> {
         reg.register(&self.0.socket, EventSet::all(), PollOpt::edge());
+        Async::Continue(self, ())
     }
 
-    fn timeout(&mut self) -> Async<Self, Option<Self>> {
+    fn timeout(self, context: &mut C) -> Async<Self, Option<Self>> {
+        unimplemented!();
+    }
+
+    fn wakeup(self, context: &mut C) -> Async<Self, Option<Self>> {
         unimplemented!();
     }
 }
