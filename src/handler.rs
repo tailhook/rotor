@@ -1,12 +1,9 @@
 use std::cmp::max;
-use std::io::Error;
-use std::usize;
 
 use time::SteadyTime;
 
 use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt};
 use mio::util::Slab;
-use mio::{Sender, TimerError};
 
 use {Async};
 
@@ -53,7 +50,7 @@ impl<'a, H> Registrator for Reg<'a, H>
     }
 }
 
-pub trait EventMachine<C> {
+pub trait EventMachine<C>: Sized {
     /// Socket readiness notification
     fn ready(self, events: EventSet, context: &mut C)
         -> Async<Self, Option<Self>>;
@@ -71,7 +68,7 @@ pub trait EventMachine<C> {
 impl<C, M> Handler<C, M>
     where M: EventMachine<C>,
 {
-    pub fn new(context: C, eloop: &mut EventLoop<Handler<C, M>>)
+    pub fn new(context: C, _eloop: &mut EventLoop<Handler<C, M>>)
         -> Handler<C, M>
     {
         // TODO(tailhook) create default config from the ulimit data instead
@@ -98,7 +95,7 @@ fn replacement<M, C, R>(ares: Async<M, R>, eloop: &mut EventLoop<Handler<C, M>>,
         }
         Stop => (None, None),
         Timeout(m, deadline) => {
-            let mut ticket = match old_timer {
+            let ticket = match old_timer {
                 Some((dl, t)) if dl == deadline => Some(t),
                 Some((_, ticket)) => {
                     eloop.clear_timeout(ticket);
