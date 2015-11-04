@@ -7,6 +7,7 @@ use time::SteadyTime;
 use mio::{EventSet, PollOpt};
 
 use super::StreamSocket as Socket;
+use super::accept::Init;
 use handler::{Registrator};
 use {Async, EventMachine};
 
@@ -20,7 +21,7 @@ struct Inner<S: Socket> {
     readable: bool,
 }
 
-pub struct Stream<C, S: Socket, P: Protocol<S, C>>
+pub struct Stream<S: Socket, P: Protocol<C>, C>
     (Inner<S>, P, PhantomData<*mut C>);
 
 pub struct Transport<'a> {
@@ -38,7 +39,25 @@ impl<S: Socket> Inner<S> {
     }
 }
 
-impl<C, S: Socket, P: Protocol<S, C>> EventMachine<C> for Stream<C, S, P> {
+impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<S, P, C> {
+    fn accept(mut conn: S, context: &mut C) -> Option<Self>
+    {
+        let protocol = match Protocol::accepted(&mut conn, context) {
+            Some(x) => x,
+            None => return None
+        };
+
+        Some(Stream(Inner {
+            socket: conn,
+            inbuf: Buf::new(),
+            outbuf: Buf::new(),
+            readable: false,
+            writable: true,   // Accepted socket is immediately writable
+        }, protocol, PhantomData))
+    }
+}
+
+impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<S, P, C> {
     fn ready(self, evset: EventSet, context: &mut C)
         -> Async<Self, Option<Self>>
     {
@@ -146,7 +165,9 @@ impl<C, S: Socket, P: Protocol<S, C>> EventMachine<C> for Stream<C, S, P> {
     }
 }
 
-pub trait Protocol<S, C>: Sized {
+pub trait Protocol<C>: Sized {
+    fn accepted<S: Socket>(conn: &mut S, context: &mut C)
+        -> Option<Self>;
     fn data_received(self, trans: &mut Transport, ctx: &mut C)
         -> Async<Self, ()>;
     fn data_transferred(self, _trans: &mut Transport, _ctx: &mut C)

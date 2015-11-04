@@ -4,7 +4,6 @@ use mio::TryAccept;
 use mio::{EventSet, Handler, PollOpt, Evented};
 
 use {Async, EventMachine};
-use super::StreamSocket;
 use handler::Registrator;
 
 pub enum Serve<S, M, C>
@@ -16,18 +15,22 @@ pub enum Serve<S, M, C>
     Connection(M),
 }
 
-unsafe impl<S:TryAccept+Send, M, Ctx> Send for Serve<S, M, Ctx>
-    where
-        M: Init<S::Output, Ctx>, M: EventMachine<Ctx>, M: Send,
-        S: TryAccept+Send, S: Evented,
-{}
-
-pub trait Init<T, C>: EventMachine<C> {
+pub trait Init<T, C>: Sized {
     fn accept(conn: T, context: &mut C) -> Option<Self>;
 }
 
+impl<S, M, C> Serve<S, M, C>
+    where M: Init<S::Output, C>, M: EventMachine<C>,
+          S: TryAccept, S: Evented,
+{
+    pub fn new(sock: S) -> Self {
+        Serve::Accept(sock, PhantomData)
+    }
+}
+
+
 impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<S, M, C>
-    where S: StreamSocket, S: TryAccept, M: Init<S::Output, C>
+    where S: TryAccept, S: Evented, M: Init<S::Output, C>
 {
     fn ready(self, evset: EventSet, context: &mut C)
         -> Async<Self, Option<Self>>

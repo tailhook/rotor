@@ -118,6 +118,23 @@ fn replacement<M, C, R>(ares: Async<M, R>, eloop: &mut EventLoop<Handler<C, M>>,
 impl<'a, Ctx, M> Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
+    pub fn add_root(&mut self, eloop: &mut EventLoop<Self>, m: M) {
+        match self.slab.insert(Cell(m, None)) {
+            Ok(tok) => {
+                self.slab.replace_with(tok, |Cell(m, timer)| {
+                    let mach = m.register(&mut Reg {
+                        eloop: eloop,
+                        token: tok
+                        });
+                    replacement(mach, eloop, tok, timer).0
+                }).unwrap(); // just inserted so must work
+            }
+            Err(_) => {
+                unimplemented!();
+            }
+        }
+    }
+
     fn action_loop<'x, F>(&mut self, token: Token,
         eloop: &'x mut EventLoop<Self>, fun: F)
         where F: Fn(M, &mut Ctx) -> Async<M, Option<M>>,
@@ -139,7 +156,7 @@ impl<'a, Ctx, M> Handler<Ctx, M>
                                 eloop: eloop,
                                 token: tok
                                 });
-                            replacement(mach, eloop, token, timer).0
+                            replacement(mach, eloop, tok, timer).0
                         }).unwrap(); // just inserted so must work
                     }
                     Err(_) => {
@@ -153,7 +170,7 @@ impl<'a, Ctx, M> Handler<Ctx, M>
     }
 }
 
-impl<'a, Ctx, M> mio::Handler for Handler<Ctx, M>
+impl<Ctx, M> mio::Handler for Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
     type Message = Notify;
