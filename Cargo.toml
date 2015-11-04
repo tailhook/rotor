@@ -7,11 +7,11 @@ license = "MIT"
 readme = "README.rst"
 keywords = ["io", "loop", "state", "machine", "mio"]
 homepage = "http://github.com/tailhook/rotor"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-mio = "0.4.2"
+mio = "0.4.3"
 log = "0.3.2"
 netbuf = "0.2"
 memchr = "0.1.6"
