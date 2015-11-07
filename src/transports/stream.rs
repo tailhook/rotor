@@ -159,7 +159,7 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<S, P, C> {
 
     fn wakeup(self, context: &mut C) -> Async<Self, Option<Self>> {
         let Stream(stream, fsm, _) = self;
-        async_try!(fsm.timeout(context))
+        async_try!(fsm.wakeup(context))
         .map(|fsm| Stream(stream, fsm, PhantomData))
         .map_result(|()| None)
     }
