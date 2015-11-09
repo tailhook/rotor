@@ -6,7 +6,7 @@ use mio::{EventSet, Handler, PollOpt, Evented};
 use {Async, EventMachine};
 use handler::Registrator;
 
-pub enum Serve<S, M, C>
+pub enum Serve<C, S, M>
     where
         M: Init<S::Output, C>, M: EventMachine<C>,
         S: TryAccept, S: Evented,
@@ -19,7 +19,7 @@ pub trait Init<T, C>: Sized {
     fn accept(conn: T, context: &mut C) -> Option<Self>;
 }
 
-impl<S, M, C> Serve<S, M, C>
+impl<S, M, C> Serve<C, S, M>
     where M: Init<S::Output, C>, M: EventMachine<C>,
           S: TryAccept, S: Evented,
 {
@@ -29,7 +29,7 @@ impl<S, M, C> Serve<S, M, C>
 }
 
 
-impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<S, M, C>
+impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
     where S: TryAccept, S: Evented, M: Init<S::Output, C>
 {
     fn ready(self, evset: EventSet, context: &mut C)

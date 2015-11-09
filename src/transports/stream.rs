@@ -21,7 +21,7 @@ struct Inner<S: Socket> {
     readable: bool,
 }
 
-pub struct Stream<S: Socket, P: Protocol<C>, C>
+pub struct Stream<C, S: Socket, P: Protocol<C>>
     (Inner<S>, P, PhantomData<*mut C>);
 
 pub struct Transport<'a> {
@@ -39,7 +39,7 @@ impl<S: Socket> Inner<S> {
     }
 }
 
-impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<S, P, C> {
+impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<C, S, P> {
     fn accept(mut conn: S, context: &mut C) -> Option<Self>
     {
         let protocol = match Protocol::accepted(&mut conn, context) {
@@ -57,7 +57,7 @@ impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<S, P, C> {
     }
 }
 
-impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<S, P, C> {
+impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
     fn ready(self, evset: EventSet, context: &mut C)
         -> Async<Self, Option<Self>>
     {
