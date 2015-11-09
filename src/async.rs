@@ -52,6 +52,17 @@ impl<M, V> Async<M, V> {
     }
 }
 
+impl<M> Async<M, Option<M>> {
+    pub fn wrap<T, F: FnMut(M) -> T>(self, mut f: F) -> Async<T, Option<T>> {
+        use self::Async::*;
+        match self {
+            Continue(m, v) => Continue(f(m), v.map(f)),
+            Stop => Stop,
+            Timeout(m, t) => Timeout(f(m), t),
+        }
+    }
+}
+
 #[macro_export]
 macro_rules! async_try {
     ($e:expr) => {
