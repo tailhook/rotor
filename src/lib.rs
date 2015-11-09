@@ -14,7 +14,6 @@ extern crate memchr;
 pub mod transports;
 pub mod handler;
 pub mod buffer_util;
-pub mod compose;
 
 pub use handler::{EventMachine, Handler};
 pub use async::Async;
