@@ -25,7 +25,9 @@ pub enum Notify {
 
 pub struct Cell<M:Sized>(M, Option<(SteadyTime, mio::Timeout)>);
 
-pub struct Handler<Ctx, M> {
+pub struct Handler<Ctx, M>
+    where M: EventMachine<Ctx>
+{
     slab: Slab<Cell<M>>,
     context: Ctx,
 }
