@@ -20,9 +20,10 @@ Resources
 =========
 
 * `Asynchronous IO in Rust`__ (random design notes about this library)
+* `Asynchronous IO in Rust (part II)`__
 
 .. __: https://medium.com/@paulcolomiets/asynchronous-io-in-rust-36b623e7b965
-
+.. __: https://medium.com/@paulcolomiets/async-io-for-rust-part-ii-33b9a7274e67
 
 Benchmarks
 ==========
