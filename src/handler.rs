@@ -1,4 +1,5 @@
 use std::cmp::max;
+use std::ops::{Deref, DerefMut};
 
 use time::SteadyTime;
 
@@ -25,6 +26,8 @@ pub enum Notify {
 
 pub struct Cell<M:Sized>(M, Option<(SteadyTime, mio::Timeout)>);
 
+pub struct Scope<'a, C:Sized+'a>(Token, &'a mut C);
+
 pub struct Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
@@ -43,6 +46,19 @@ struct Reg<'a, H>
     token: Token,
 }
 
+impl<'a, C> Deref for Scope<'a, C> {
+    type Target = C;
+    fn deref(&self) -> &C {
+        self.1
+    }
+}
+
+impl<'a, C> DerefMut for Scope<'a, C> {
+    fn deref_mut(&mut self) -> &mut C {
+        self.1
+    }
+}
+
 impl<'a, H> Registrator for Reg<'a, H>
     where H: mio::Handler + 'a, H::Timeout: 'a, H::Message: 'a
 {
@@ -54,17 +70,17 @@ impl<'a, H> Registrator for Reg<'a, H>
 
 pub trait EventMachine<C>: Sized {
     /// Socket readiness notification
-    fn ready(self, events: EventSet, context: &mut C)
+    fn ready(self, events: EventSet, scope: &mut Scope<C>)
         -> Async<Self, Option<Self>>;
 
     /// Gives socket a chance to register in event loop
     fn register(self, reg: &mut Registrator) -> Async<Self, ()>;
 
     /// Timeout happened
-    fn timeout(self, context: &mut C) -> Async<Self, Option<Self>>;
+    fn timeout(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>>;
 
     /// Message received
-    fn wakeup(self, context: &mut C) -> Async<Self, Option<Self>>;
+    fn wakeup(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>>;
 }
 
 impl<C, M> Handler<C, M>
@@ -180,13 +196,15 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
     fn ready<'x>(&mut self, eloop: &'x mut EventLoop<Self>,
         token: Token, events: EventSet)
     {
-        self.action_loop(token, eloop, |m, ctx| m.ready(events, ctx));
+        self.action_loop(token, eloop,
+            |m, ctx| m.ready(events, &mut Scope(token, ctx)));
     }
 
     fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Notify) {
         match msg {
             Notify::Fsm(token) => {
-                self.action_loop(token, eloop, |m, ctx| m.wakeup(ctx));
+                self.action_loop(token, eloop,
+                    |m, ctx| m.wakeup(&mut Scope(token, ctx)));
             }
         }
     }
@@ -194,7 +212,8 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
     fn timeout(&mut self, eloop: &mut EventLoop<Self>, timeo: Timeo) {
         match timeo {
             Timeo::Fsm(token) => {
-                self.action_loop(token, eloop, |m, ctx| m.wakeup(ctx));
+                self.action_loop(token, eloop,
+                    |m, ctx| m.wakeup(&mut Scope(token, ctx)));
             }
         }
 

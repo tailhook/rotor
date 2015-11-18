@@ -9,7 +9,7 @@ use mio::{EventSet, PollOpt};
 use super::StreamSocket as Socket;
 use super::accept::Init;
 use handler::{Registrator};
-use {Async, EventMachine};
+use {Async, EventMachine, Scope};
 
 pub struct Timeout(pub SteadyTime);
 
@@ -40,9 +40,9 @@ impl<S: Socket> Inner<S> {
 }
 
 impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<C, S, P> {
-    fn accept(mut conn: S, context: &mut C) -> Option<Self>
+    fn accept(mut conn: S, scope: &mut Scope<C>) -> Option<Self>
     {
-        let protocol = match Protocol::accepted(&mut conn, context) {
+        let protocol = match Protocol::accepted(&mut conn, scope) {
             Some(x) => x,
             None => return None
         };
@@ -58,7 +58,7 @@ impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<C, S, P> {
 }
 
 impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
-    fn ready(self, evset: EventSet, context: &mut C)
+    fn ready(self, evset: EventSet, scope: &mut Scope<C>)
         -> Async<Self, Option<Self>>
     {
         let Stream(mut stream, fsm, _) = self;
@@ -68,13 +68,13 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
             while stream.outbuf.len() > 0 {
                 match stream.outbuf.write_to(&mut stream.socket) {
                     Ok(0) => { // Connection closed
-                        monad.done(|fsm| fsm.eof_received(context));
+                        monad.done(|fsm| fsm.eof_received(scope));
                         return Async::Stop;
                     }
                     Ok(_) => {
                         monad = async_try!(monad.and_then(|f| {
                             f.data_transferred(
-                                &mut stream.transport(), context)
+                                &mut stream.transport(), scope)
                         }));
                     }
                     Err(ref e) if e.kind() == WouldBlock => {
@@ -83,7 +83,7 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
                     }
                     Err(ref e) if e.kind() == Interrupted =>  { continue; }
                     Err(e) => {
-                        monad.done(|fsm| fsm.error_happened(e, context));
+                        monad.done(|fsm| fsm.error_happened(e, scope));
                         return Async::Stop;
                     }
                 }
@@ -94,13 +94,13 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
             loop {
                 match stream.inbuf.read_from(&mut stream.socket) {
                     Ok(0) => { // Connection closed
-                        monad.done(|fsm| fsm.eof_received(context));
+                        monad.done(|fsm| fsm.eof_received(scope));
                         return Async::Stop;
                     }
                     Ok(_) => {
                         monad = async_try!(monad.and_then(|f| {
                             f.data_received(
-                                &mut stream.transport(), context)
+                                &mut stream.transport(), scope)
                         }));
                     }
                     Err(ref e) if e.kind() == WouldBlock => {
@@ -109,7 +109,7 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
                     }
                     Err(ref e) if e.kind() == Interrupted =>  { continue; }
                     Err(e) => {
-                        monad.done(|fsm| fsm.error_happened(e, context));
+                        monad.done(|fsm| fsm.error_happened(e, scope));
                         return Async::Stop;
                     }
                 }
@@ -119,13 +119,13 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
             while stream.outbuf.len() > 0 {
                 match stream.outbuf.write_to(&mut stream.socket) {
                     Ok(0) => { // Connection closed
-                        monad.done(|fsm| fsm.eof_received(context));
+                        monad.done(|fsm| fsm.eof_received(scope));
                         return Async::Stop;
                     }
                     Ok(_) => {
                         monad = async_try!(monad.and_then(|f| {
                             f.data_transferred(
-                                &mut stream.transport(), context)
+                                &mut stream.transport(), scope)
                         }));
                     }
                     Err(ref e) if e.kind() == WouldBlock => {
@@ -134,7 +134,7 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
                     }
                     Err(ref e) if e.kind() == Interrupted =>  { continue; }
                     Err(e) => {
-                        monad.done(|fsm| fsm.error_happened(e, context));
+                        monad.done(|fsm| fsm.error_happened(e, scope));
                         return Async::Stop;
                     }
                 }
@@ -150,38 +150,38 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
         Async::Continue(self, ())
     }
 
-    fn timeout(self, context: &mut C) -> Async<Self, Option<Self>> {
+    fn timeout(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>> {
         let Stream(stream, fsm, _) = self;
-        async_try!(fsm.timeout(context))
+        async_try!(fsm.timeout(scope))
         .map(|fsm| Stream(stream, fsm, PhantomData))
         .map_result(|()| None)
     }
 
-    fn wakeup(self, context: &mut C) -> Async<Self, Option<Self>> {
+    fn wakeup(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>> {
         let Stream(stream, fsm, _) = self;
-        async_try!(fsm.wakeup(context))
+        async_try!(fsm.wakeup(scope))
         .map(|fsm| Stream(stream, fsm, PhantomData))
         .map_result(|()| None)
     }
 }
 
 pub trait Protocol<C>: Sized {
-    fn accepted<S: Socket>(conn: &mut S, context: &mut C)
+    fn accepted<S: Socket>(conn: &mut S, scope: &mut Scope<C>)
         -> Option<Self>;
-    fn data_received(self, trans: &mut Transport, ctx: &mut C)
+    fn data_received(self, trans: &mut Transport, scope: &mut Scope<C>)
         -> Async<Self, ()>;
-    fn data_transferred(self, _trans: &mut Transport, _ctx: &mut C)
+    fn data_transferred(self, _trans: &mut Transport, _scope: &mut Scope<C>)
         -> Async<Self, ()> {
         Async::Continue(self, ())
     }
     // TODO(tailhook) some error object should be here
-    fn error_happened(self, _err: io::Error, _ctx: &mut C) {}
-    fn eof_received(self, _ctx: &mut C) {}
+    fn error_happened(self, _err: io::Error, _scope: &mut Scope<C>) {}
+    fn eof_received(self, _scope: &mut Scope<C>) {}
 
-    fn timeout(self, _context: &mut C) -> Async<Self, ()> {
+    fn timeout(self, _scope: &mut Scope<C>) -> Async<Self, ()> {
         Async::Continue(self, ())
     }
-    fn wakeup(self, _context: &mut C) -> Async<Self, ()> {
+    fn wakeup(self, _scope: &mut Scope<C>) -> Async<Self, ()> {
         Async::Continue(self, ())
     }
 }

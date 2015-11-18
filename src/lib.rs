@@ -15,5 +15,5 @@ pub mod transports;
 pub mod handler;
 pub mod buffer_util;
 
-pub use handler::{EventMachine, Handler};
+pub use handler::{EventMachine, Handler, Scope};
 pub use async::Async;

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use mio::TryAccept;
 use mio::{EventSet, Handler, PollOpt, Evented};
 
-use {Async, EventMachine};
+use {Async, EventMachine, Scope};
 use handler::Registrator;
 
 pub enum Serve<C, S, M>
@@ -16,7 +16,7 @@ pub enum Serve<C, S, M>
 }
 
 pub trait Init<T, C>: Sized {
-    fn accept(conn: T, context: &mut C) -> Option<Self>;
+    fn accept(conn: T, scope: &mut Scope<C>) -> Option<Self>;
 }
 
 impl<S, M, C> Serve<C, S, M>
@@ -32,7 +32,7 @@ impl<S, M, C> Serve<C, S, M>
 impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
     where S: TryAccept, S: Evented, M: Init<S::Output, C>
 {
-    fn ready(self, evset: EventSet, context: &mut C)
+    fn ready(self, evset: EventSet, scope: &mut Scope<C>)
         -> Async<Self, Option<Self>>
     {
         use self::Serve::*;
@@ -40,7 +40,7 @@ impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
             Accept(sock, _) => {
                 let new_machine = match sock.accept() {
                     Ok(Some(child)) => {
-                        <M as Init<_, _>>::accept(child, context)
+                        <M as Init<_, _>>::accept(child, scope)
                     }
                     Ok(None) => None,
                     Err(e) => {
@@ -52,7 +52,7 @@ impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
                     new_machine.map(Connection))
             }
             Connection(c) => {
-                c.ready(evset, context)
+                c.ready(evset, scope)
                     .map(Connection).map_result(|x| x.map(Connection))
             }
         }
@@ -67,23 +67,23 @@ impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
             Connection(c) => c.register(reg).map(Connection),
         }
     }
-    fn timeout(self, context: &mut C) -> Async<Self, Option<Self>> {
+    fn timeout(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>> {
         use self::Serve::*;
         match self {
             me @ Accept(_, _) => Async::Continue(me, None),
             Connection(c) => {
-                c.timeout(context)
+                c.timeout(scope)
                     .map(Connection).map_result(|x| x.map(Connection))
             }
         }
     }
 
-    fn wakeup(self, context: &mut C) -> Async<Self, Option<Self>> {
+    fn wakeup(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>> {
         use self::Serve::*;
         match self {
             me @ Accept(_, _) => Async::Continue(me, None),
             Connection(c) => {
-                c.wakeup(context)
+                c.wakeup(scope)
                     .map(Connection).map_result(|x| x.map(Connection))
             }
         }
