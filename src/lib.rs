@@ -15,7 +15,9 @@ pub mod transports;
 pub mod handler;
 pub mod buffer_util;
 mod scope;
+mod future;
 
 pub use handler::{EventMachine, Handler};
 pub use async::Async;
 pub use scope::Scope;
+pub use future::{Future, Port};

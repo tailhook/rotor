@@ -2,7 +2,7 @@ use std::cmp::max;
 
 use time::SteadyTime;
 
-use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt};
+use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt, Sender};
 use mio::util::Slab;
 
 use {Async};
@@ -31,6 +31,7 @@ pub struct Handler<Ctx, M>
 {
     slab: Slab<Cell<M>>,
     context: Ctx,
+    channel: Sender<Notify>,
 }
 
 pub trait Registrator {
@@ -71,7 +72,7 @@ pub trait EventMachine<C>: Sized {
 impl<C, M> Handler<C, M>
     where M: EventMachine<C>,
 {
-    pub fn new(context: C, _eloop: &mut EventLoop<Handler<C, M>>)
+    pub fn new(context: C, eloop: &mut EventLoop<Handler<C, M>>)
         -> Handler<C, M>
     {
         // TODO(tailhook) create default config from the ulimit data instead
@@ -79,6 +80,7 @@ impl<C, M> Handler<C, M>
         Handler {
             slab: Slab::new(4096),
             context: context,
+            channel: eloop.channel(),
         }
     }
 }
@@ -140,13 +142,13 @@ impl<'a, Ctx, M> Handler<Ctx, M>
 
     fn action_loop<'x, F>(&mut self, token: Token,
         eloop: &'x mut EventLoop<Self>, fun: F)
-        where F: Fn(M, &mut Ctx) -> Async<M, Option<M>>,
+        where F: Fn(M, &mut Scope<Ctx>) -> Async<M, Option<M>>,
     {
-        let ref mut ctx = self.context;
+        let ref mut scope = scope(token, &mut self.context, &mut self.channel);
         loop {
             let mut new_machine = None;
             self.slab.replace_with(token, |Cell(m, timer)| {
-                let mach = fun(m, ctx);
+                let mach = fun(m, scope);
                 let (cell, res) = replacement(mach, eloop, token, timer);
                 new_machine = res.and_then(|r| r);
                 cell
@@ -182,14 +184,14 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
         token: Token, events: EventSet)
     {
         self.action_loop(token, eloop,
-            |m, ctx| m.ready(events, &mut scope(token, ctx)));
+            |m, scope| m.ready(events, scope));
     }
 
     fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Notify) {
         match msg {
             Notify::Fsm(token) => {
                 self.action_loop(token, eloop,
-                    |m, ctx| m.wakeup(&mut scope(token, ctx)));
+                    |m, scope| m.wakeup(scope));
             }
         }
     }
@@ -198,7 +200,7 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
         match timeo {
             Timeo::Fsm(token) => {
                 self.action_loop(token, eloop,
-                    |m, ctx| m.wakeup(&mut scope(token, ctx)));
+                    |m, scope| m.wakeup(scope));
             }
         }
 
