@@ -1,5 +1,4 @@
 use std::cmp::max;
-use std::ops::{Deref, DerefMut};
 
 use time::SteadyTime;
 
@@ -7,6 +6,7 @@ use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt};
 use mio::util::Slab;
 
 use {Async};
+use scope::{Scope, scope};
 
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -26,8 +26,6 @@ pub enum Notify {
 
 pub struct Cell<M:Sized>(M, Option<(SteadyTime, mio::Timeout)>);
 
-pub struct Scope<'a, C:Sized+'a>(Token, &'a mut C);
-
 pub struct Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
@@ -44,19 +42,6 @@ struct Reg<'a, H>
 {
     eloop: &'a mut EventLoop<H>,
     token: Token,
-}
-
-impl<'a, C> Deref for Scope<'a, C> {
-    type Target = C;
-    fn deref(&self) -> &C {
-        self.1
-    }
-}
-
-impl<'a, C> DerefMut for Scope<'a, C> {
-    fn deref_mut(&mut self) -> &mut C {
-        self.1
-    }
 }
 
 impl<'a, H> Registrator for Reg<'a, H>
@@ -197,14 +182,14 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
         token: Token, events: EventSet)
     {
         self.action_loop(token, eloop,
-            |m, ctx| m.ready(events, &mut Scope(token, ctx)));
+            |m, ctx| m.ready(events, &mut scope(token, ctx)));
     }
 
     fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Notify) {
         match msg {
             Notify::Fsm(token) => {
                 self.action_loop(token, eloop,
-                    |m, ctx| m.wakeup(&mut Scope(token, ctx)));
+                    |m, ctx| m.wakeup(&mut scope(token, ctx)));
             }
         }
     }
@@ -213,7 +198,7 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
         match timeo {
             Timeo::Fsm(token) => {
                 self.action_loop(token, eloop,
-                    |m, ctx| m.wakeup(&mut Scope(token, ctx)));
+                    |m, ctx| m.wakeup(&mut scope(token, ctx)));
             }
         }
 
