@@ -16,8 +16,10 @@ pub mod handler;
 pub mod buffer_util;
 mod scope;
 mod future;
+mod timeproto;
 
 pub use handler::{EventMachine, Handler};
 pub use async::Async;
 pub use scope::Scope;
 pub use future::{Future, Port};
+pub use timeproto::Timer;
