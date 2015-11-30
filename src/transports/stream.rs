@@ -187,10 +187,30 @@ pub trait Protocol<C>: Sized {
 }
 
 impl<'a> Transport<'a> {
+    pub fn new(inbuf: &'a mut  Buf, outbuf: &'a mut Buf) -> Transport<'a> {
+        Transport {
+            inbuf: inbuf,
+            outbuf: outbuf,
+        }
+    }
     pub fn input<'x>(&'x mut self) -> &'x mut Buf {
         self.inbuf
     }
     pub fn output<'x>(&'x mut self) -> &'x mut Buf {
         self.outbuf
     }
+}
+
+#[test]
+fn test_transport() {
+    let mut inbuf = Buf::new();
+    inbuf.extend(b"spam");
+    let mut outbuf = Buf::new();
+    {
+        let mut transport = Transport::new(&mut inbuf, &mut outbuf);
+        let transport_input = transport.input();
+        transport_input.extend(b"foobar");
+        transport_input.consume(7);
+    }
+    assert_eq!(&inbuf[..], b"bar");
 }
