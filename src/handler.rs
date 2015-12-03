@@ -5,68 +5,30 @@ use time::SteadyTime;
 use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt, Sender};
 use mio::util::Slab;
 
-use {Async};
-use scope::{Scope, scope};
+use scope::scope;
+use {Async, Scope, Notify, BaseMachine, scope};
 
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub enum Abort {
-    NoSlabSpace,
-    RegisterFailed,
-    MachineAddError,
-}
 
 pub enum Timeo {
     Fsm(Token),
 }
 
-pub enum Notify {
-    Fsm(Token),
-}
-
-pub struct Cell<M:Sized>(M, Option<(SteadyTime, mio::Timeout)>);
-
 pub struct Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
-    slab: Slab<Cell<M>>,
+    slab: Slab<M>,
     context: Ctx,
     channel: Sender<Notify>,
 }
 
-pub trait Registrator {
-    fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt);
-}
-
-struct Reg<'a, H>
-    where H: mio::Handler + 'a, H::Timeout: 'a, H::Message: 'a
+pub trait EventMachine<C>: BaseMachine<C, Value=Self, State=()>
 {
-    eloop: &'a mut EventLoop<H>,
-    token: Token,
-}
-
-impl<'a, H> Registrator for Reg<'a, H>
-    where H: mio::Handler + 'a, H::Timeout: 'a, H::Message: 'a
-{
-    fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
-    {
-        self.eloop.register_opt(io, self.token, interest, opt).unwrap();
-    }
-}
-
-pub trait EventMachine<C>: Sized {
     /// Socket readiness notification
     fn ready(self, events: EventSet, scope: &mut Scope<C>)
-        -> Async<Self, Option<Self>>;
+        -> Async<Self, Self, ()>;
 
     /// Gives socket a chance to register in event loop
-    fn register(self, reg: &mut Registrator) -> Async<Self, ()>;
-
-    /// Timeout happened
-    fn timeout(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>>;
-
-    /// Message received
-    fn wakeup(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>>;
+    fn register(self, scope: &mut Scope<C>) -> Async<Self, Self, ()>;
 }
 
 impl<C, M> Handler<C, M>
@@ -85,92 +47,96 @@ impl<C, M> Handler<C, M>
     }
 }
 
-fn replacement<M, C, R>(ares: Async<M, R>, eloop: &mut EventLoop<Handler<C, M>>,
-    token: Token, old_timer: Option<(SteadyTime, mio::Timeout)>)
-    -> (Option<Cell<M>>, Option<R>)
-    where M:Sized, M:EventMachine<C>, R:Sized
-{
-    use async::Async::*;
-    match ares {
-        Continue(m, result) => {
-            if let Some((_, ticket)) = old_timer {
-                eloop.clear_timeout(ticket);
-            }
-            (Some(Cell(m, None)), Some(result))
-        }
-        Stop => (None, None),
-        Timeout(m, deadline) => {
-            let ticket = match old_timer {
-                Some((dl, t)) if dl == deadline => Some(t),
-                Some((_, ticket)) => {
-                    eloop.clear_timeout(ticket);
-                    None
-                }
-                None => None,
-            };
-            let ticket = ticket.unwrap_or_else(|| {
-                let left = deadline - SteadyTime::now();
-                eloop.timeout_ms(
-                        Timeo::Fsm(token),
-                        max(left.num_milliseconds(), 0) as u64,
-                    ).ok().expect("No more timer slots?")
-            });
-            (Some(Cell(m, Some((deadline, ticket)))), None)
-        }
-    }
-}
-
 impl<'a, Ctx, M> Handler<Ctx, M>
     where M: EventMachine<Ctx>
 {
     pub fn add_root(&mut self, eloop: &mut EventLoop<Self>, m: M) {
-        match self.slab.insert(Cell(m, None)) {
-            Ok(tok) => {
-                self.slab.replace_with(tok, |Cell(m, timer)| {
-                    let mach = m.register(&mut Reg {
-                        eloop: eloop,
-                        token: tok
-                        });
-                    replacement(mach, eloop, tok, timer).0
-                }).unwrap(); // just inserted so must work
+        // TODO(tailhook) give a chance to register
+        match self.slab.insert(m) {
+            Ok(token) => {
+                machine_loop(self, eloop, token, |m, scope| m.register(scope))
             }
             Err(_) => {
-                unimplemented!();
+                panic!("Can't add root");
             }
         }
     }
 
-    fn action_loop<'x, F>(&mut self, token: Token,
-        eloop: &'x mut EventLoop<Self>, fun: F)
-        where F: Fn(M, &mut Scope<Ctx>) -> Async<M, Option<M>>,
+}
+
+struct AResult<M:Sized> {
+    machine: Option<M>,
+    value: Option<M>,
+    next_iter: bool,
+}
+
+impl<M:Sized> AResult<M> {
+    fn from(val: Async<M, M, ()>) -> AResult<M>
     {
-        let ref mut scope = scope(token, &mut self.context, &mut self.channel);
-        loop {
-            let mut new_machine = None;
-            self.slab.replace_with(token, |Cell(m, timer)| {
-                let mach = fun(m, scope);
-                let (cell, res) = replacement(mach, eloop, token, timer);
-                new_machine = res.and_then(|r| r);
-                cell
-            }).ok();  // Spurious events are ok in mio
-            if let Some(new) = new_machine {
-                match self.slab.insert(Cell(new, None)) {
-                    Ok(tok) => {
-                        self.slab.replace_with(tok, |Cell(m, timer)| {
-                            let mach = m.register(&mut Reg {
-                                eloop: eloop,
-                                token: tok
-                                });
-                            replacement(mach, eloop, tok, timer).0
-                        }).unwrap(); // just inserted so must work
-                    }
-                    Err(_) => {
-                        unimplemented!();
-                    }
-                }
-            } else {
-                break;
-            }
+        match val {
+            Async::Send(m, v) => AResult {
+                machine: Some(m),
+                value: Some(v),
+                next_iter: true,
+            },
+            Async::Yield(m, ()) => AResult {
+                machine: Some(m),
+                value: None,
+                next_iter: false,
+            },
+            Async::Return(m, v, ()) => AResult {
+                machine: Some(m),
+                value: Some(v),
+                next_iter: false,
+            },
+            Async::Ignore(m) => AResult {
+                machine: Some(m),
+                value: None,
+                next_iter: false,
+            },
+            Async::Stop => AResult {
+                machine: None,
+                value: None,
+                next_iter: false,
+            },
+        }
+    }
+}
+
+fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
+    eloop: &mut EventLoop<Handler<C, M>>, token: Token, fun: F)
+    where M: EventMachine<C>,
+          F: FnOnce(M, &mut Scope<C>) -> Async<M, M, ()>
+{
+    let mut next_iter = true;
+    let mut nmachine = None;
+    {
+        let ref mut scope = scope(token, &mut handler.context,
+            &mut handler.channel, eloop);
+        handler.slab.replace_with(token, |m| {
+            let ar = AResult::from(fun(m, scope));
+            next_iter = ar.next_iter;
+            nmachine = ar.value;
+            ar.machine
+        }).ok();  // Spurious events are ok in mio
+    }
+    if let Some(m) = nmachine {
+        handler.add_root(eloop, m);
+    }
+    while next_iter {
+        let mut nmachine = None;
+        {
+            let ref mut scope = scope(token, &mut handler.context,
+                &mut handler.channel, eloop);
+            handler.slab.replace_with(token, |m| {
+                let ar = AResult::from(m.wakeup(scope));
+                next_iter = ar.next_iter;
+                nmachine = ar.value;
+                ar.machine
+            }).unwrap();  // Spurious events are ok in mio
+        }
+        if let Some(m) = nmachine {
+            handler.add_root(eloop, m);
         }
     }
 }
@@ -183,27 +149,31 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
     fn ready<'x>(&mut self, eloop: &'x mut EventLoop<Self>,
         token: Token, events: EventSet)
     {
-        self.action_loop(token, eloop,
-            |m, scope| m.ready(events, scope));
+        machine_loop(self, eloop, token, |m, scope| { m.ready(events, scope) })
     }
 
     fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Notify) {
+        unimplemented!();
+        /*
         match msg {
             Notify::Fsm(token) => {
                 self.action_loop(token, eloop,
                     |m, scope| m.wakeup(scope));
             }
         }
+        */
     }
 
     fn timeout(&mut self, eloop: &mut EventLoop<Self>, timeo: Timeo) {
+        unimplemented!();
+        /*
         match timeo {
             Timeo::Fsm(token) => {
                 self.action_loop(token, eloop,
                     |m, scope| m.wakeup(scope));
             }
         }
-
+        */
     }
 }
 

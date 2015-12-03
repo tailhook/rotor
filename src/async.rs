@@ -5,12 +5,15 @@ use time::SteadyTime;
 
 #[derive(PartialEq, Eq, Debug)]
 #[must_use]
-pub enum Async<M, V> {
-    Continue(M, V),
+pub enum Async<M:Sized, V:Sized, S:Sized> {
+    Send(M, V),
+    Yield(M, S),
+    Return(M, V, S), // Send + Yield
+    Ignore(M),
     Stop,
-    Timeout(M, SteadyTime),
 }
 
+/*
 impl<M, V> Async<M, V> {
     pub fn and_then<T, R, F: FnOnce(M) -> Async<T, R>>(self, f: F)
         -> Async<T, R>
@@ -76,3 +79,4 @@ macro_rules! async_try {
         }
     }
 }
+*/

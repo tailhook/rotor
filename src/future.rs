@@ -2,32 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use mio::{Token, Sender};
 
-use handler::Notify;
-
-pub struct Port<T: Sized> {
-    token: Token,
-    contents: Arc<Mutex<Option<T>>>,
-    channel: Sender<Notify>,
-}
-
-pub struct Future<T: Sized> {
-    contents: Arc<Mutex<Option<T>>>,
-}
-
-pub fn pair<T:Sized>(token: Token, channel: &Sender<Notify>)
-    -> (Port<T>, Future<T>)
-{
-    let arc = Arc::new(Mutex::new(None::<T>));
-    let port = Port {
-        token: token,
-        contents: arc.clone(),
-        channel: channel.clone(),
-    };
-    let future = Future {
-        contents: arc,
-    };
-    return (port, future);
-}
+use {Notify, Port, Future};
 
 impl<T:Sized> Port<T> {
     /// Set the value of the future
