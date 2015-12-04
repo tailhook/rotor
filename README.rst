@@ -56,7 +56,7 @@ Performance on newer desktop class CPU (i7-4790K CPU @ 4.00GHz)::
 
 Note: both benchmarks are run on **single threaded** server.
 
-The bencmarks are too early (not a full implementation of HTTP), so no
+The benchmarks are too early (not a full implementation of HTTP), so no
 comparison bencmarks listed here.
 
 
