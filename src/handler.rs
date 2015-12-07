@@ -133,7 +133,7 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
                 next_iter = ar.next_iter;
                 nmachine = ar.value;
                 ar.machine
-            }).unwrap();  // Spurious events are ok in mio
+            }).unwrap();  // We know that machine is here
         }
         if let Some(m) = nmachine {
             handler.add_root(eloop, m);
@@ -153,27 +153,21 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
     }
 
     fn notify(&mut self, eloop: &mut EventLoop<Self>, msg: Notify) {
-        unimplemented!();
-        /*
         match msg {
             Notify::Fsm(token) => {
-                self.action_loop(token, eloop,
-                    |m, scope| m.wakeup(scope));
+                machine_loop(self, eloop, token,
+                    |m, scope| { m.wakeup(scope) })
             }
         }
-        */
     }
 
     fn timeout(&mut self, eloop: &mut EventLoop<Self>, timeo: Timeo) {
-        unimplemented!();
-        /*
         match timeo {
             Timeo::Fsm(token) => {
-                self.action_loop(token, eloop,
-                    |m, scope| m.wakeup(scope));
+                machine_loop(self, eloop, token,
+                    |m, scope| { m.timeout(scope) })
             }
         }
-        */
     }
 }
 
