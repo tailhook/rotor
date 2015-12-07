@@ -13,8 +13,8 @@ pub enum Async<M:Sized, V:Sized, S:Sized> {
     Stop,
 }
 
-/*
-impl<M, V> Async<M, V> {
+impl<M:Sized, V:Sized, S:Sized> Async<M, V, S> {
+    /*
     pub fn and_then<T, R, F: FnOnce(M) -> Async<T, R>>(self, f: F)
         -> Async<T, R>
     {
@@ -29,22 +29,28 @@ impl<M, V> Async<M, V> {
             },
         }
     }
-    pub fn map<T, F: FnOnce(M) -> T>(self, f: F) -> Async<T, V> {
+    */
+    pub fn map<T, F: FnOnce(M) -> T>(self, f: F) -> Async<T, V, S> {
         use self::Async::*;
         match self {
-            Continue(m, v) => Continue(f(m), v),
+            Send(m, v) => Send(f(m), v),
+            Yield(m, s) => Yield(f(m), s),
+            Return(m, v, s) => Return(f(m), v, s),
+            Ignore(m) => Ignore(f(m)),
             Stop => Stop,
-            Timeout(m, t) => Timeout(f(m), t),
         }
     }
-    pub fn map_result<R, F: FnOnce(V) -> R>(self, f: F) -> Async<M, R> {
+    pub fn map_result<R, F: FnOnce(V) -> R>(self, f: F) -> Async<M, R, S> {
         use self::Async::*;
         match self {
-            Continue(m, v) => Continue(m, f(v)),
+            Send(m, v) => Send(m, f(v)),
+            Yield(m, s) => Yield(m, s),
+            Return(m, v, s) => Return(m, f(v), s),
+            Ignore(m) => Ignore(m),
             Stop => Stop,
-            Timeout(m, t) => Timeout(m, t),
         }
     }
+    /*
     pub fn done<R, F: FnOnce(M) -> R>(self, f: F) -> Option<R> {
         use self::Async::*;
         match self {
@@ -53,8 +59,10 @@ impl<M, V> Async<M, V> {
             Timeout(m, _) => Some(f(m)),
         }
     }
+    */
 }
 
+/*
 impl<M> Async<M, Option<M>> {
     pub fn wrap<T, F: FnMut(M) -> T>(self, mut f: F) -> Async<T, Option<T>> {
         use self::Async::*;

@@ -1,7 +1,10 @@
+use std::io;
 use std::sync::{Arc, Mutex};
 use std::ops::{Deref, DerefMut};
 
-use mio::{Token, Sender};
+use time::SteadyTime;
+
+use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
 
 use {Notify, Future, Port, LoopApi};
 
@@ -10,6 +13,24 @@ pub struct Scope<'a, C:Sized+'a>{
     ctx: &'a mut C,
     channel: &'a mut Sender<Notify>,
     loop_api: &'a mut LoopApi,
+}
+
+impl<'a, C:Sized+'a> Scope<'a, C> {
+    pub fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.loop_api.register(io, self.token, interest, opt)
+    }
+
+    pub fn timeout(&mut self, at: SteadyTime)
+        -> Result<Timeout, TimerError>
+    {
+        self.loop_api.timeout(self.token, at)
+    }
+    pub fn clear_timeout(&mut self, token: Timeout) -> bool
+    {
+        self.loop_api.clear_timeout(token)
+    }
 }
 
 fn pair<T:Sized>(token: Token, channel: &Sender<Notify>)
