@@ -5,11 +5,11 @@ use std::io::ErrorKind::{WouldBlock, Interrupted};
 use netbuf::Buf;
 use time::SteadyTime;
 use mio::{EventSet, PollOpt};
+use void::Void;
 
 use super::StreamSocket as Socket;
 use super::accept::Init;
-use handler::{Registrator};
-use {Async, EventMachine, Scope};
+use {Async, BaseMachine, EventMachine, Scope};
 
 pub struct Timeout(pub SteadyTime);
 
@@ -40,9 +40,9 @@ impl<S: Socket> Inner<S> {
 }
 
 impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<C, S, P> {
-    fn accept(mut conn: S, scope: &mut Scope<C>) -> Option<Self>
+    fn accept(mut conn: S) -> Option<Self>
     {
-        let protocol = match Protocol::accepted(&mut conn, scope) {
+        let protocol = match Protocol::accepted(&mut conn) {
             Some(x) => x,
             None => return None
         };
@@ -59,10 +59,10 @@ impl<C, S: Socket, P: Protocol<C>> Init<S, C> for Stream<C, S, P> {
 
 impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
     fn ready(self, evset: EventSet, scope: &mut Scope<C>)
-        -> Async<Self, Option<Self>>
+        -> Async<Self, Self, ()>
     {
         let Stream(mut stream, fsm, _) = self;
-        let mut monad = Async::Continue(fsm, ());
+        let mut monad = Async::Yield(fsm, ());
         if evset.is_writable() && stream.outbuf.len() > 0 {
             stream.writable = true;
             while stream.outbuf.len() > 0 {
@@ -72,7 +72,7 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
                         return Async::Stop;
                     }
                     Ok(_) => {
-                        monad = async_try!(monad.and_then(|f| {
+                        monad = async_try!(monad.map(|f| {
                             f.data_transferred(
                                 &mut stream.transport(), scope)
                         }));
@@ -145,45 +145,40 @@ impl<C, S: Socket, P: Protocol<C>> EventMachine<C> for Stream<C, S, P> {
         .map_result(|()| None)
     }
 
-    fn register(self, reg: &mut Registrator) -> Async<Self, ()> {
-        reg.register(&self.0.socket, EventSet::all(), PollOpt::edge());
+    fn register(self, scope: &mut Scope<C>) -> Async<Self, Self, ()> {
+        scope.register(&self.0.socket, EventSet::readable(), PollOpt::level());
         Async::Continue(self, ())
-    }
-
-    fn timeout(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>> {
-        let Stream(stream, fsm, _) = self;
-        async_try!(fsm.timeout(scope))
-        .map(|fsm| Stream(stream, fsm, PhantomData))
-        .map_result(|()| None)
-    }
-
-    fn wakeup(self, scope: &mut Scope<C>) -> Async<Self, Option<Self>> {
-        let Stream(stream, fsm, _) = self;
-        async_try!(fsm.wakeup(scope))
-        .map(|fsm| Stream(stream, fsm, PhantomData))
-        .map_result(|()| None)
     }
 }
 
-pub trait Protocol<C>: Sized {
-    fn accepted<S: Socket>(conn: &mut S, scope: &mut Scope<C>)
+impl<C, S: Socket, P: Protocol<C>> BaseMachine<C> for Stream<C, S, P> {
+    type Value = Self;
+    type State = ();
+    fn timeout(self, scope: &mut Scope<C>) -> Async<Self, Self, ()> {
+        let Stream(stream, fsm, _) = self;
+        fsm.timeout(scope)
+        .map(|fsm| Stream(stream, fsm, PhantomData))
+    }
+
+    fn wakeup(self, scope: &mut Scope<C>) -> Async<Self, Self, ()> {
+        let Stream(stream, fsm, _) = self;
+        fsm.wakeup(scope)
+        .map(|fsm| Stream(stream, fsm, PhantomData))
+    }
+}
+
+pub trait Protocol<C>: BaseMachine<C, Value=Void, State=()> {
+    fn accepted<S: Socket>(conn: &mut S)
         -> Option<Self>;
     fn data_received(self, trans: &mut Transport, scope: &mut Scope<C>)
-        -> Async<Self, ()>;
+        -> Async<Self, Void, ()>;
     fn data_transferred(self, _trans: &mut Transport, _scope: &mut Scope<C>)
-        -> Async<Self, ()> {
+        -> Async<Self, Void, ()> {
         Async::Continue(self, ())
     }
     // TODO(tailhook) some error object should be here
     fn error_happened(self, _err: io::Error, _scope: &mut Scope<C>) {}
     fn eof_received(self, _scope: &mut Scope<C>) {}
-
-    fn timeout(self, _scope: &mut Scope<C>) -> Async<Self, ()> {
-        Async::Continue(self, ())
-    }
-    fn wakeup(self, _scope: &mut Scope<C>) -> Async<Self, ()> {
-        Async::Continue(self, ())
-    }
 }
 
 impl<'a> Transport<'a> {

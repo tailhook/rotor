@@ -15,7 +15,7 @@ pub enum Serve<C, S, M>
 }
 
 pub trait Init<T, C>: Sized {
-    fn accept(conn: T, scope: &mut Scope<C>) -> Option<Self>;
+    fn accept(conn: T) -> Option<Self>;
 }
 
 impl<S, M, C> Serve<C, S, M>
@@ -95,7 +95,7 @@ impl<C, S, M: EventMachine<C>> BaseMachine<C> for Serve<C, S, M>
             Accept(sock, _) => {
                 match sock.accept() {
                     Ok(Some(child)) => {
-                        if let Some(m) = <M as Init<_, _>>::accept(child, scope) {
+                        if let Some(m) = <M as Init<_, _>>::accept(child) {
                             Async::Send(Accept(sock, PhantomData),
                                 Connection(m))
                         } else {

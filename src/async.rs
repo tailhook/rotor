@@ -14,22 +14,6 @@ pub enum Async<M:Sized, V:Sized, S:Sized> {
 }
 
 impl<M:Sized, V:Sized, S:Sized> Async<M, V, S> {
-    /*
-    pub fn and_then<T, R, F: FnOnce(M) -> Async<T, R>>(self, f: F)
-        -> Async<T, R>
-    {
-        use self::Async::*;
-        match self {
-            Continue(m, _) => f(m),
-            Stop => Stop,
-            Timeout(m, t1) => match f(m) {
-                Continue(m, v) => Continue(m, v),
-                Stop => Stop,
-                Timeout(m, t2) => Timeout(m, min(t1, t2)),
-            },
-        }
-    }
-    */
     pub fn map<T, F: FnOnce(M) -> T>(self, f: F) -> Async<T, V, S> {
         use self::Async::*;
         match self {
@@ -50,16 +34,16 @@ impl<M:Sized, V:Sized, S:Sized> Async<M, V, S> {
             Stop => Stop,
         }
     }
-    /*
     pub fn done<R, F: FnOnce(M) -> R>(self, f: F) -> Option<R> {
         use self::Async::*;
         match self {
-            Continue(m, _) => Some(f(m)),
+            Send(m, _) => Some(f(m)),
+            Yield(m, _) => Some(f(m)),
+            Return(m, _, _) => Some(f(m)),
+            Ignore(m) => Some(f(m)),
             Stop => None,
-            Timeout(m, _) => Some(f(m)),
         }
     }
-    */
 }
 
 /*
@@ -74,17 +58,14 @@ impl<M> Async<M, Option<M>> {
     }
 }
 
+*/
+
 #[macro_export]
 macro_rules! async_try {
     ($e:expr) => {
         match $e {
-            $crate::async::Async::Continue(m, v)
-            => $crate::async::Async::Continue(m, v),
-            $crate::async::Async::Timeout(m, t)
-            => $crate::async::Async::Timeout(m, t),
-            $crate::async::Async::Stop
-            => return $crate::async::Async::Stop,
+            $crate::async::Async::Stop => return $crate::async::Async::Stop,
+            x => x,
         }
     }
 }
-*/

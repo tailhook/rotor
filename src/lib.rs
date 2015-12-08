@@ -9,6 +9,7 @@ extern crate time;
 extern crate mio;
 #[macro_use] extern crate log;
 extern crate memchr;
+extern crate void;
 
 use mio::{Token, Sender};
 use std::sync::{Arc, Mutex};
