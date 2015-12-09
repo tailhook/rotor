@@ -38,7 +38,7 @@ impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
             Accept(sock, _) => {
                 match sock.accept() {
                     Ok(Some(child)) => {
-                        if let Some(m) = <M as Init<_, _>>::accept(child, scope) {
+                        if let Some(m) = <M as Init<_, _>>::accept(child) {
                             Async::Send(Accept(sock, PhantomData),
                                 Connection(m))
                         } else {
@@ -64,7 +64,8 @@ impl<C, S, M: EventMachine<C>> EventMachine<C> for Serve<C, S, M>
         use self::Serve::*;
         match self {
             Accept(s, _) => {
-                scope.register(&s, EventSet::readable(), PollOpt::level());
+                scope.register(&s, EventSet::readable(), PollOpt::level())
+                    .unwrap(); // TODO(tailhook)
                 Async::Yield(Accept(s, PhantomData), ())
             }
             Connection(c) => c.register(scope)
