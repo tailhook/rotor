@@ -9,16 +9,12 @@ extern crate mio;
 use mio::{Token, Sender};
 use std::sync::{Arc, Mutex};
 
-#[macro_use] pub mod async;
-pub mod handler;
-mod base;
+mod handler;
 mod scope;
 mod future;
 mod loop_api;
 
-pub use base::BaseMachine;
 pub use handler::{EventMachine, Handler};
-pub use async::Async;
 pub use scope::Scope;
 pub use loop_api::LoopApi;
 
@@ -36,3 +32,16 @@ pub struct Future<T: Sized> {
     contents: Arc<Mutex<Option<T>>>,
 }
 
+pub struct Response<M: Sized>(Option<M>, Option<M>);
+
+impl<M: Sized> Response<M> {
+    pub fn ok(machine: M) -> Response<M> {
+        Response(Some(machine), None)
+    }
+    pub fn spawn(machine: M, result: M) -> Response<M> {
+        Response(Some(machine), Some(result))
+    }
+    pub fn done() -> Response<M> {
+        Response::<M>(None, None)
+    }
+}

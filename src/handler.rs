@@ -2,7 +2,7 @@ use mio::{self, EventLoop, Token, EventSet, Evented, Sender};
 use mio::util::Slab;
 
 use scope::scope;
-use {Async, Scope, Notify, BaseMachine};
+use {Scope, Notify, Response};
 
 
 pub enum Timeo {
@@ -17,14 +17,21 @@ pub struct Handler<Ctx, M>
     channel: Sender<Notify>,
 }
 
-pub trait EventMachine<C>: BaseMachine<C, Value=Self, State=()>
-{
+pub trait EventMachine<C>: Sized {
     /// Socket readiness notification
-    fn ready(self, events: EventSet, scope: &mut Scope<C>)
-        -> Async<Self, Self, ()>;
+    fn ready(self, events: EventSet, scope: &mut Scope<C>) -> Response<Self>;
+
+    /// Called after spawn event
+    fn spawned(self, scope: &mut Scope<C>) -> Response<Self>;
 
     /// Gives socket a chance to register in event loop
-    fn register(self, scope: &mut Scope<C>) -> Async<Self, Self, ()>;
+    fn register(self, scope: &mut Scope<C>) -> Response<Self>;
+
+    /// Timeout happened
+    fn timeout(self, scope: &mut Scope<C>) -> Response<Self>;
+
+    /// Message received
+    fn wakeup(self, scope: &mut Scope<C>) -> Response<Self>;
 }
 
 impl<C, M> Handler<C, M>
@@ -60,80 +67,30 @@ impl<'a, Ctx, M> Handler<Ctx, M>
 
 }
 
-struct AResult<M:Sized> {
-    machine: Option<M>,
-    value: Option<M>,
-    next_iter: bool,
-}
-
-impl<M:Sized> AResult<M> {
-    fn from(val: Async<M, M, ()>) -> AResult<M>
-    {
-        match val {
-            Async::Send(m, v) => AResult {
-                machine: Some(m),
-                value: Some(v),
-                next_iter: true,
-            },
-            Async::Yield(m, ()) => AResult {
-                machine: Some(m),
-                value: None,
-                next_iter: false,
-            },
-            Async::Return(m, v, ()) => AResult {
-                machine: Some(m),
-                value: Some(v),
-                next_iter: false,
-            },
-            Async::Ignore(m) => AResult {
-                machine: Some(m),
-                value: None,
-                next_iter: false,
-            },
-            Async::Stop => AResult {
-                machine: None,
-                value: None,
-                next_iter: false,
-            },
-        }
-    }
-}
-
 fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     eloop: &mut EventLoop<Handler<C, M>>, token: Token, fun: F)
     where M: EventMachine<C>,
-          F: FnOnce(M, &mut Scope<C>) -> Async<M, M, ()>
+          F: FnOnce(M, &mut Scope<C>) -> Response<M>
 {
-    let mut next_iter = true;
     let mut nmachine = None;
     {
         let ref mut scope = scope(token, &mut handler.context,
             &mut handler.channel, eloop);
         handler.slab.replace_with(token, |m| {
-            let ar = AResult::from(fun(m, scope));
-            next_iter = ar.next_iter;
-            nmachine = ar.value;
-            ar.machine
+            let res = fun(m, scope);
+            nmachine = res.1;
+            res.0
         }).ok();  // Spurious events are ok in mio
     }
-    if let Some(m) = nmachine {
+    while let Some(m) = nmachine.take() {
         handler.add_root(eloop, m);
-    }
-    while next_iter {
-        let mut nmachine = None;
-        {
-            let ref mut scope = scope(token, &mut handler.context,
-                &mut handler.channel, eloop);
-            handler.slab.replace_with(token, |m| {
-                let ar = AResult::from(m.wakeup(scope));
-                next_iter = ar.next_iter;
-                nmachine = ar.value;
-                ar.machine
-            }).unwrap();  // We know that machine is here
-        }
-        if let Some(m) = nmachine {
-            handler.add_root(eloop, m);
-        }
+        let ref mut scope = scope(token, &mut handler.context,
+            &mut handler.channel, eloop);
+        handler.slab.replace_with(token, |m| {
+            let res = m.spawned(scope);
+            nmachine = res.1;
+            res.0
+        }).ok();  // We know that machine is here
     }
 }
 
