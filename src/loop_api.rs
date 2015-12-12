@@ -21,7 +21,7 @@ impl<'a, C, M> LoopApi for EventLoop<Handler<C, M>>
     fn register(&mut self, io: &Evented, token: Token,
         interest: EventSet, opt: PollOpt) -> io::Result<()>
     {
-        self.register_opt(io, token, interest, opt)
+        self.register(io, token, interest, opt)
     }
 
     fn timeout(&mut self, token: Token, at: SteadyTime)
