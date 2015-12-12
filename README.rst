@@ -7,6 +7,9 @@ Rotor
 
 .. __: https://github.com/tailhook/rotor-http/tree/master/examples
 
+**This is 0.4.x version of the library it's very stripped, and has not proven
+to work yet. Stay tuned!**
+
 The mio-based framework for rust for doing I/O in simple and composable way.
 
 Features:
