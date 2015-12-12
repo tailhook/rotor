@@ -1,8 +1,3 @@
-use std::cmp::min;
-
-use time::SteadyTime;
-
-
 #[derive(PartialEq, Eq, Debug)]
 #[must_use]
 pub enum Async<M:Sized, V:Sized, S:Sized> {

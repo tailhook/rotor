@@ -12,11 +12,6 @@ authors = ["paul@colomiets.name"]
 
 [dependencies]
 mio = "0.5"
-log = "0.3.2"
-netbuf = "0.2"
-memchr = "0.1.6"
-time = "0.1.23"
-void = "0.0.5"
 
 [lib]
 name = "rotor"

@@ -1,7 +1,3 @@
-use std::sync::{Arc, Mutex};
-
-use mio::{Token, Sender};
-
 use {Notify, Port, Future};
 
 impl<T:Sized> Port<T> {

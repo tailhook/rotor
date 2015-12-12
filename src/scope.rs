@@ -2,8 +2,6 @@ use std::io;
 use std::sync::{Arc, Mutex};
 use std::ops::{Deref, DerefMut};
 
-use time::SteadyTime;
-
 use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
 
 use {Notify, Future, Port, LoopApi};
@@ -22,10 +20,9 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
         self.loop_api.register(io, self.token, interest, opt)
     }
 
-    pub fn timeout(&mut self, at: SteadyTime)
-        -> Result<Timeout, TimerError>
+    pub fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
     {
-        self.loop_api.timeout(self.token, at)
+        self.loop_api.timeout_ms(self.token, delay)
     }
     pub fn clear_timeout(&mut self, token: Timeout) -> bool
     {

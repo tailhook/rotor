@@ -1,12 +1,8 @@
-use std::cmp::max;
-
-use time::SteadyTime;
-
-use mio::{self, EventLoop, Token, EventSet, Evented, PollOpt, Sender};
+use mio::{self, EventLoop, Token, EventSet, Evented, Sender};
 use mio::util::Slab;
 
 use scope::scope;
-use {Async, Scope, Notify, BaseMachine, scope};
+use {Async, Scope, Notify, BaseMachine};
 
 
 pub enum Timeo {
