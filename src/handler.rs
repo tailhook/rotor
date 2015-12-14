@@ -18,14 +18,14 @@ pub struct Handler<Ctx, M>
 }
 
 pub trait EventMachine<C>: Sized {
+    /// Gives socket a chance to register in event loop
+    fn register(self, scope: &mut Scope<C>) -> Response<Self>;
+
     /// Socket readiness notification
     fn ready(self, events: EventSet, scope: &mut Scope<C>) -> Response<Self>;
 
     /// Called after spawn event
     fn spawned(self, scope: &mut Scope<C>) -> Response<Self>;
-
-    /// Gives socket a chance to register in event loop
-    fn register(self, scope: &mut Scope<C>) -> Response<Self>;
 
     /// Timeout happened
     fn timeout(self, scope: &mut Scope<C>) -> Response<Self>;

@@ -14,7 +14,7 @@ mod scope;
 mod future;
 mod loop_api;
 
-pub use handler::{EventMachine, Handler};
+pub use handler::{EventMachine as Machine, Handler};
 pub use scope::Scope;
 pub use loop_api::LoopApi;
 
