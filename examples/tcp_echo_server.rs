@@ -3,7 +3,7 @@ extern crate rotor;
 
 use std::io::{Write, stderr};
 
-use mio::{EventSet, PollOpt};
+use mio::{EventSet, PollOpt, TryRead, TryWrite};
 use mio::tcp::{TcpListener, TcpStream};
 use rotor::{Machine, Response, Scope};
 
@@ -28,7 +28,7 @@ impl Echo {
                         Response::ok(Echo::Server(sock))
                     }
                     Err(e) => {
-                        writeln!(&mut stderr(), "Error: {}", e);
+                        writeln!(&mut stderr(), "Error: {}", e).ok();
                         Response::ok(Echo::Server(sock))
                     }
                 }
@@ -58,9 +58,30 @@ impl Machine<Context> for Echo {
     {
         match self {
             me @ Echo::Server(..) => me.accept(),
-            Echo::Connection(sock) => {
+            Echo::Connection(mut sock) => {
                 let mut data = [0u8; 1024];
-                //sock.read(&mut data, );
+                match sock.try_read(&mut data) {
+                    Err(e) => {
+                        writeln!(&mut stderr(), "read: {}", e).ok();
+                        Response::done()
+                    }
+                    Ok(Some(x)) => {
+                        match sock.try_write(&data[..x]) {
+                            Ok(_) => {
+                                // this is example so we don't care if not all
+                                // (or none at all) bytes are written
+                                Response::ok(Echo::Connection(sock))
+                            }
+                            Err(e) => {
+                                writeln!(&mut stderr(), "write: {}", e).ok();
+                                Response::done()
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        Response::ok(Echo::Connection(sock))
+                    }
+                }
             }
         }
     }
