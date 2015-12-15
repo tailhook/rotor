@@ -13,10 +13,15 @@ mod handler;
 mod scope;
 mod future;
 mod loop_api;
+mod response;
+mod compose;
+mod macros;
 
 pub use handler::{EventMachine as Machine, Handler};
 pub use scope::Scope;
 pub use loop_api::LoopApi;
+
+pub use compose::{Compose2};
 
 pub enum Notify {
     Fsm(Token),
@@ -33,15 +38,3 @@ pub struct Future<T: Sized> {
 }
 
 pub struct Response<M: Sized>(Option<M>, Option<M>);
-
-impl<M: Sized> Response<M> {
-    pub fn ok(machine: M) -> Response<M> {
-        Response(Some(machine), None)
-    }
-    pub fn spawn(machine: M, result: M) -> Response<M> {
-        Response(Some(machine), Some(result))
-    }
-    pub fn done() -> Response<M> {
-        Response::<M>(None, None)
-    }
-}

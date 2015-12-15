@@ -19,6 +19,16 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     {
         self.loop_api.register(io, self.token, interest, opt)
     }
+    pub fn reregister(&mut self, io: &Evented,
+        interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.loop_api.reregister(io, self.token, interest, opt)
+    }
+    pub fn deregister(&mut self, io: &Evented) -> io::Result<()>
+    {
+        self.loop_api.deregister(io)
+    }
 
     pub fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
     {

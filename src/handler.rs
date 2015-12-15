@@ -19,12 +19,18 @@ pub struct Handler<Ctx, M>
 
 pub trait EventMachine<C>: Sized {
     /// Gives socket a chance to register in event loop
+    ///
+    /// Guaranteed to be called only once
     fn register(self, scope: &mut Scope<C>) -> Response<Self>;
 
     /// Socket readiness notification
     fn ready(self, events: EventSet, scope: &mut Scope<C>) -> Response<Self>;
 
     /// Called after spawn event
+    ///
+    /// This is mostly a continuation event. I.e. when you accept a socket
+    /// and return a new state machine from `ready()`. You may wish to accept
+    /// another socket right now. This is what `spawned` event is for.
     fn spawned(self, scope: &mut Scope<C>) -> Response<Self>;
 
     /// Timeout happened
