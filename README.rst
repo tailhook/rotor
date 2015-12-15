@@ -2,25 +2,34 @@
 Rotor
 =====
 
-:Status: Proof of Concept
-:Examples: `in rotor-http library`__
+:Status: Alpha
+:Examples: `tcp-echo-server`__
 
-.. __: https://github.com/tailhook/rotor-http/tree/master/examples
-
-**This is 0.4.x version of the library it's very stripped, and has not proven
-to work yet. Stay tuned!**
+.. __: https://github.com/tailhook/rotor/blob/master/examples/tcp_echo_server.rs
 
 The mio-based framework for rust for doing I/O in simple and composable way.
 
-Features:
+The rotor core (this crate) basically consists of:
 
-* Based on hierarchical state machine concept
-* Ownership semantics for state machines allows to write
-  without memory/resource leaks
-* Easy to combine multiple libraries into single mio event loop
+* An event loop handler (in terms of mio) which turns mio event into
+  event to specific state machine
+* A Future type which allows communication between state machines in safe
+  and efficient way
+* A simple way to combine multiple libraries (e.g. multiple protocol handlers)
+  into single mio event loop
+
+At the end of the day, rotor is the minimalistic core for making composable
+libraries on top. It's less than 0.5KLoC.
+
+You are expected to use some higher level abstraction most of the time.
+For example, you should use stream abstraction (yet to be implemented) for
+making TCP protocol parser.
+
 
 Resources
 =========
+
+**Both are rather historical at the moment**
 
 * `Asynchronous IO in Rust`__ (random design notes about this library)
 * `Asynchronous IO in Rust (part II)`__
@@ -30,6 +39,11 @@ Resources
 
 Benchmarks
 ==========
+
+**These benchmarks are based on old version of `this example`__**. Hopefully
+we will get updated benchmarks soon.
+
+.. __: https://github.com/tailhook/rotor-http/blob/master/examples/hello_world_server.rs
 
 Just few micro-benchmarks to show that framework has a decent peformance.
 
