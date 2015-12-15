@@ -3,9 +3,9 @@ Rotor
 =====
 
 :Status: Alpha
-:Examples: `tcp-echo-server`__
+:Examples: `tcp-echo-server`_
 
-.. __: https://github.com/tailhook/rotor/blob/master/examples/tcp_echo_server.rs
+.. _tcp-echo-server: https://github.com/tailhook/rotor/blob/master/examples/tcp_echo_server.rs
 
 The mio-based framework for rust for doing I/O in simple and composable way.
 
@@ -31,19 +31,18 @@ Resources
 
 **Both are rather historical at the moment**
 
-* `Asynchronous IO in Rust`__ (random design notes about this library)
-* `Asynchronous IO in Rust (part II)`__
+* `Asynchronous IO in Rust <https://medium.com/@paulcolomiets/asynchronous-io-in-rust-36b623e7b965>`_
+  (random design notes about this library)
+* `Asynchronous IO in Rust (part II) <https://medium.com/@paulcolomiets/async-io-for-rust-part-ii-33b9a7274e67>`_
 
-.. __: https://medium.com/@paulcolomiets/asynchronous-io-in-rust-36b623e7b965
-.. __: https://medium.com/@paulcolomiets/async-io-for-rust-part-ii-33b9a7274e67
 
 Benchmarks
 ==========
 
-**These benchmarks are based on old version of `this example`__**. Hopefully
+These benchmarks are based on **old version of** `this example`_. Hopefully
 we will get updated benchmarks soon.
 
-.. __: https://github.com/tailhook/rotor-http/blob/master/examples/hello_world_server.rs
+.. _this example: https://github.com/tailhook/rotor-http/blob/master/examples/hello_world_server.rs
 
 Just few micro-benchmarks to show that framework has a decent peformance.
 
