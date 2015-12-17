@@ -1,8 +1,8 @@
-use mio::{self, EventLoop, Token, EventSet, Evented, Sender};
+use mio::{self, EventLoop, Token, EventSet, Sender};
 use mio::util::Slab;
 
 use scope::scope;
-use {Scope, Notify, Response};
+use {Scope, Notify, Response, Machine, Creator, CreationError};
 
 
 pub enum Timeo {
@@ -10,38 +10,15 @@ pub enum Timeo {
 }
 
 pub struct Handler<Ctx, M>
-    where M: EventMachine<Ctx>
+    where M: Machine<Ctx>
 {
     slab: Slab<M>,
     context: Ctx,
     channel: Sender<Notify>,
 }
 
-pub trait EventMachine<C>: Sized {
-    /// Gives socket a chance to register in event loop
-    ///
-    /// Guaranteed to be called only once
-    fn register(self, scope: &mut Scope<C>) -> Response<Self>;
-
-    /// Socket readiness notification
-    fn ready(self, events: EventSet, scope: &mut Scope<C>) -> Response<Self>;
-
-    /// Called after spawn event
-    ///
-    /// This is mostly a continuation event. I.e. when you accept a socket
-    /// and return a new state machine from `ready()`. You may wish to accept
-    /// another socket right now. This is what `spawned` event is for.
-    fn spawned(self, scope: &mut Scope<C>) -> Response<Self>;
-
-    /// Timeout happened
-    fn timeout(self, scope: &mut Scope<C>) -> Response<Self>;
-
-    /// Message received
-    fn wakeup(self, scope: &mut Scope<C>) -> Response<Self>;
-}
-
 impl<C, M> Handler<C, M>
-    where M: EventMachine<C>,
+    where M: Machine<C>,
 {
     pub fn new(context: C, eloop: &mut EventLoop<Handler<C, M>>)
         -> Handler<C, M>
@@ -56,18 +33,30 @@ impl<C, M> Handler<C, M>
     }
 }
 
-impl<'a, Ctx, M> Handler<Ctx, M>
-    where M: EventMachine<Ctx>
+impl<C, M> Handler<C, M>
+    where M: Machine<C>
 {
-    pub fn add_root(&mut self, eloop: &mut EventLoop<Self>, m: M) {
-        // TODO(tailhook) give a chance to register
-        match self.slab.insert(m) {
-            Ok(token) => {
-                machine_loop(self, eloop, token, |m, scope| m.register(scope))
+    pub fn add_machine_with<F, E:Sized>(&mut self,
+        eloop: &mut EventLoop<Self>, fun: F)
+        -> Result<(), CreationError<(), E>>
+        where F: FnOnce(&mut Scope<C>) -> Result<M, E>
+    {
+        let ref mut ctx = self.context;
+        let ref mut chan = self.channel;
+        let res = self.slab.insert_with(|token| {
+            let ref mut scope = scope(token, ctx, chan, eloop);
+            match fun(scope) {
+                Ok(x) => x,
+                Err(_) => {
+                // TODO(tailhook) when Slab::insert_with_opt() lands, fix it
+                    panic!("Unimplemented: Slab::insert_with_opt");
+                }
             }
-            Err(_) => {
-                panic!("Can't add root");
-            }
+        });
+        if res.is_some() {
+            Ok(())
+        } else {
+            Err(CreationError::OutOfResources(()))
         }
     }
 
@@ -75,33 +64,50 @@ impl<'a, Ctx, M> Handler<Ctx, M>
 
 fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     eloop: &mut EventLoop<Handler<C, M>>, token: Token, fun: F)
-    where M: EventMachine<C>,
-          F: FnOnce(M, &mut Scope<C>) -> Response<M>
+    where M: Machine<C>,
+          F: FnOnce(M, &mut Scope<C>) -> Response<M, M::Creator>
 {
-    let mut nmachine = None;
+    let mut creator = None;
     {
         let ref mut scope = scope(token, &mut handler.context,
             &mut handler.channel, eloop);
         handler.slab.replace_with(token, |m| {
             let res = fun(m, scope);
-            nmachine = res.1;
+            creator = res.1;
             res.0
         }).ok();  // Spurious events are ok in mio
     }
-    while let Some(m) = nmachine.take() {
-        handler.add_root(eloop, m);
-        let ref mut scope = scope(token, &mut handler.context,
-            &mut handler.channel, eloop);
-        handler.slab.replace_with(token, |m| {
-            let res = m.spawned(scope);
-            nmachine = res.1;
-            res.0
-        }).ok();  // We know that machine is here
+    while let Some(new) = creator.take() {
+        let mut new = Some(new);
+        let res = handler.add_machine_with(eloop, |scope| {
+            new.take().unwrap().create(scope)
+        });
+        if let Err(e) = res {
+            use CreationError::*;
+            let err = match e {
+                OutOfResources(()) => OutOfResources(new.unwrap()),
+                CreatorFailure(e) => CreatorFailure(e),
+            };
+            let ref mut scope = scope(token, &mut handler.context,
+                &mut handler.channel, eloop);
+            handler.slab.replace_with(token, |m| {
+                m.spawn_error(scope, err)
+            }).ok();
+            break;
+        } else {
+            let ref mut scope = scope(token, &mut handler.context,
+                &mut handler.channel, eloop);
+            handler.slab.replace_with(token, |m| {
+                let res = m.spawned(scope);
+                creator = res.1;
+                res.0
+            }).ok();
+        }
     }
 }
 
 impl<Ctx, M> mio::Handler for Handler<Ctx, M>
-    where M: EventMachine<Ctx>
+    where M: Machine<Ctx>
 {
     type Message = Notify;
     type Timeout = Timeo;

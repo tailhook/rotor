@@ -2,7 +2,8 @@ use std::io;
 
 use mio::{Token, Evented, EventSet, PollOpt, EventLoop, Timeout, TimerError};
 
-use handler::{Handler, Timeo, EventMachine};
+use handler::{Handler, Timeo};
+use {Machine};
 
 
 pub trait LoopApi {
@@ -17,7 +18,7 @@ pub trait LoopApi {
 }
 
 impl<'a, C, M> LoopApi for EventLoop<Handler<C, M>>
-    where M: EventMachine<C>
+    where M: Machine<C>
 {
     fn register(&mut self, io: &Evented, token: Token,
         interest: EventSet, opt: PollOpt) -> io::Result<()>

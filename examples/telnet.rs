@@ -2,10 +2,12 @@ extern crate mio;
 extern crate nix;
 #[macro_use] extern crate rotor;
 extern crate argparse;
+extern crate void;
 
 use std::io::{Write, stderr, stdout};
 use std::os::unix::io::FromRawFd;
 
+use void::Void;
 use mio::{EventSet, PollOpt, TryRead, TryWrite};
 use mio::tcp::{TcpStream};
 use mio::unix::{UnixStream};
@@ -30,26 +32,26 @@ struct Stdin {
 //type Composed = Compose2<Tcp, Stdin>;
 
 //Or alternatively use macro
-rotor_compose!(enum Composed <Context> {
+rotor_compose!(enum Composed/CCreator/CError <Context> {
     Tcp(Tcp),
     Stdin(Stdin),
 });
 
 // ^^ note that enum names are different, you need to fix them below
 
-impl Machine<Context> for Tcp {
-    fn register(self, scope: &mut Scope<Context>) -> Response<Self> {
-        match self {
-            Tcp::Connecting(sock) => {
-                scope.register(&sock, EventSet::writable(), PollOpt::level())
-                    .unwrap();
-                Response::ok(Tcp::Connecting(sock))
-            }
-            _ => unreachable!(),
-        }
+impl Tcp {
+    fn new(sock: TcpStream, scope: &mut Scope<Context>) -> Tcp
+    {
+        scope.register(&sock, EventSet::writable(), PollOpt::level())
+            .unwrap();
+        Tcp::Connecting(sock)
     }
+}
+
+impl Machine<Context> for Tcp {
+    type Creator = Void;
     fn ready(self, _events: EventSet, scope: &mut Scope<Context>)
-        -> Response<Self>
+        -> Response<Self, Void>
     {
         match self {
             Tcp::Connecting(sock) => {
@@ -77,26 +79,35 @@ impl Machine<Context> for Tcp {
             }
         }
     }
-    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self>
+    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self, Void>
     {
         unreachable!();
     }
-    fn timeout(self, _scope: &mut Scope<Context>) -> Response<Self> {
+    fn timeout(self, _scope: &mut Scope<Context>) -> Response<Self, Void> {
         unreachable!();
     }
-    fn wakeup(self, _scope: &mut Scope<Context>) -> Response<Self> {
+    fn wakeup(self, _scope: &mut Scope<Context>) -> Response<Self, Void> {
         unreachable!();
     }
 }
 
-impl Machine<Context> for Stdin {
-    fn register(self, scope: &mut Scope<Context>) -> Response<Self> {
-        scope.register(&self.input, EventSet::writable(), PollOpt::level())
+impl Stdin {
+    fn new(dest: TcpStream, scope: &mut Scope<Context>) -> Stdin
+    {
+        let stdin = unsafe { UnixStream::from_raw_fd(0) };
+        scope.register(&stdin, EventSet::writable(), PollOpt::level())
             .unwrap();
-        Response::ok(self)
+        Stdin {
+            input: stdin,
+            output: dest,
+        }
     }
+}
+
+impl Machine<Context> for Stdin {
+    type Creator = Void;
     fn ready(mut self, _events: EventSet, _scope: &mut Scope<Context>)
-        -> Response<Self>
+        -> Response<Self, Void>
     {
         let mut data = [0u8; 1024];
         match self.input.try_read(&mut data) {
@@ -122,14 +133,14 @@ impl Machine<Context> for Stdin {
         }
         Response::ok(self)
     }
-    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self>
+    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self, Void>
     {
         unreachable!();
     }
-    fn timeout(self, _scope: &mut Scope<Context>) -> Response<Self> {
+    fn timeout(self, _scope: &mut Scope<Context>) -> Response<Self, Void> {
         unreachable!();
     }
-    fn wakeup(self, _scope: &mut Scope<Context>) -> Response<Self> {
+    fn wakeup(self, _scope: &mut Scope<Context>) -> Response<Self, Void> {
         unreachable!();
     }
 }
@@ -157,19 +168,20 @@ fn main() {
     let mut event_loop = mio::EventLoop::new().unwrap();
     let mut handler = rotor::Handler::new(Context, &mut event_loop);
 
-    let lst = TcpStream::connect(
+    let conn = TcpStream::connect(
         // Any better way for current stable rust?
         &format!("{}:{}", host, port).parse().unwrap()).unwrap();
+    let conn2 = conn.try_clone().unwrap();
 
     // We clone output socket so we don't need to communicate between sockets
     // This isn't a good idea for the real work
     fcntl(0, FcntlArg::F_SETFL(O_NONBLOCK)).expect("fcntl");
-    let stdin = Stdin {
-        input: unsafe { UnixStream::from_raw_fd(0) },
-        output: lst.try_clone().unwrap(),
-    };
 
-    handler.add_root(&mut event_loop, Composed::Tcp(Tcp::Connecting(lst)));
-    handler.add_root(&mut event_loop, Composed::Stdin(stdin));
+    let conn = handler.add_machine_with(&mut event_loop, |scope| {
+        Composed::Tcp(Tcp::new(conn))
+    });
+    let stdio = handler.add_machine_with(&mut event_loop, |scope| {
+        Composed::Stdin(Stdin::new(conn2))
+    });
     event_loop.run(&mut handler).unwrap();
 }

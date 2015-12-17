@@ -1,28 +1,51 @@
 extern crate mio;
 extern crate rotor;
+extern crate void;
 
 use std::io::{Write, stderr};
 
+use void::Void;
 use mio::{EventSet, PollOpt, TryRead, TryWrite};
 use mio::tcp::{TcpListener, TcpStream};
-use rotor::{Machine, Response, Scope};
+use rotor::{Machine, Creator, Response, Scope};
 
 
 struct Context;
+
+struct ConnCreator(TcpStream);
+
 
 enum Echo {
     Server(TcpListener),
     Connection(TcpStream),
 }
 
+impl Creator<Context> for ConnCreator {
+    type Machine = Echo;
+    type Error = Void;
+    fn create(self, scope: &mut Scope<Context>) -> Result<Echo, Void> {
+        Ok(Echo::connection(self.0, scope))
+    }
+}
+
 impl Echo {
-    fn accept(self) -> Response<Echo> {
+    pub fn new(sock: TcpListener, scope: &mut Scope<Context>) -> Echo {
+        scope.register(&sock, EventSet::readable(), PollOpt::edge())
+            .unwrap();
+        Echo::Server(sock)
+    }
+    fn connection(sock: TcpStream, scope: &mut Scope<Context>) -> Echo {
+        scope.register(&sock, EventSet::readable(), PollOpt::level())
+            .unwrap();
+        Echo::Connection(sock)
+    }
+    fn accept(self) -> Response<Echo, ConnCreator> {
         match self {
             Echo::Server(sock) => {
                 match sock.accept() {
                     Ok(Some((conn, _))) => {
                         Response::spawn(Echo::Server(sock),
-                                        Echo::Connection(conn))
+                                        ConnCreator(conn))
                     }
                     Ok(None) => {
                         Response::ok(Echo::Server(sock))
@@ -39,22 +62,10 @@ impl Echo {
 }
 
 impl Machine<Context> for Echo {
-    fn register(self, scope: &mut Scope<Context>) -> Response<Self> {
-        match self {
-            Echo::Server(sock) => {
-                scope.register(&sock, EventSet::readable(), PollOpt::edge())
-                    .unwrap();
-                Response::ok(Echo::Server(sock))
-            }
-            Echo::Connection(sock) => {
-                scope.register(&sock, EventSet::readable(), PollOpt::level())
-                    .unwrap();
-                Response::ok(Echo::Connection(sock))
-            }
-        }
-    }
+    type Creator = ConnCreator;
+
     fn ready(self, _events: EventSet, _scope: &mut Scope<Context>)
-        -> Response<Self>
+        -> Response<Self, ConnCreator>
     {
         match self {
             me @ Echo::Server(..) => me.accept(),
@@ -85,17 +96,21 @@ impl Machine<Context> for Echo {
             }
         }
     }
-    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self>
+    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self, ConnCreator>
     {
         match self {
             me @ Echo::Server(..) => me.accept(),
             _ => unreachable!(),
         }
     }
-    fn timeout(self, _scope: &mut Scope<Context>) -> Response<Self> {
+    fn timeout(self, _scope: &mut Scope<Context>)
+        -> Response<Self, ConnCreator>
+    {
         unreachable!();
     }
-    fn wakeup(self, _scope: &mut Scope<Context>) -> Response<Self> {
+    fn wakeup(self, _scope: &mut Scope<Context>)
+        -> Response<Self, ConnCreator>
+    {
         unreachable!();
     }
 }
@@ -104,6 +119,9 @@ fn main() {
     let mut event_loop = mio::EventLoop::new().unwrap();
     let mut handler = rotor::Handler::new(Context, &mut event_loop);
     let lst = TcpListener::bind(&"127.0.0.1:3000".parse().unwrap()).unwrap();
-    handler.add_root(&mut event_loop, Echo::Server(lst));
+    let ok = handler.add_machine_with(&mut event_loop, |scope| {
+        Ok::<_, Void>(Echo::new(lst, scope))
+    }).is_ok();
+    assert!(ok);
     event_loop.run(&mut handler).unwrap();
 }
