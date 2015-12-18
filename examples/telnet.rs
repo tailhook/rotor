@@ -4,10 +4,11 @@ extern crate nix;
 extern crate argparse;
 extern crate void;
 
+use std::error::Error;
 use std::io::{Write, stderr, stdout};
 use std::os::unix::io::FromRawFd;
 
-use void::Void;
+use void::{Void, unreachable};
 use mio::{EventSet, PollOpt, TryRead, TryWrite};
 use mio::tcp::{TcpStream};
 use mio::unix::{UnixStream};
@@ -32,7 +33,7 @@ struct Stdin {
 //type Composed = Compose2<Tcp, Stdin>;
 
 //Or alternatively use macro
-rotor_compose!(enum Composed/CCreator/CError <Context> {
+rotor_compose!(enum Composed/CSeed <Context> {
     Tcp(Tcp),
     Stdin(Stdin),
 });
@@ -49,7 +50,12 @@ impl Tcp {
 }
 
 impl Machine<Context> for Tcp {
-    type Creator = Void;
+    type Seed = Void;
+    fn create(seed: Void, _scope: &mut Scope<Context>)
+        -> Result<Self, Box<Error>>
+    {
+        unreachable(seed);
+    }
     fn ready(self, _events: EventSet, scope: &mut Scope<Context>)
         -> Response<Self, Void>
     {
@@ -63,7 +69,15 @@ impl Machine<Context> for Tcp {
                 let mut data = [0u8; 1024];
                 match sock.try_read(&mut data) {
                     Err(e) => {
+                        // We deregister socket, because we have a dup of it
+                        // and if we don't deregister our dup would always
+                        // trigger for this machine, which does not exist any
+                        // more since Response::done()
+                        scope.deregister(&sock).unwrap();
                         writeln!(&mut stderr(), "read: {}", e).ok();
+                        Response::done()
+                    }
+                    Ok(Some(0)) => {
                         Response::done()
                     }
                     Ok(Some(x)) => {
@@ -95,7 +109,7 @@ impl Stdin {
     fn new(dest: TcpStream, scope: &mut Scope<Context>) -> Stdin
     {
         let stdin = unsafe { UnixStream::from_raw_fd(0) };
-        scope.register(&stdin, EventSet::writable(), PollOpt::level())
+        scope.register(&stdin, EventSet::readable(), PollOpt::level())
             .unwrap();
         Stdin {
             input: stdin,
@@ -105,7 +119,12 @@ impl Stdin {
 }
 
 impl Machine<Context> for Stdin {
-    type Creator = Void;
+    type Seed = Void;
+    fn create(seed: Void, _scope: &mut Scope<Context>)
+        -> Result<Self, Box<Error>>
+    {
+        unreachable(seed);
+    }
     fn ready(mut self, _events: EventSet, _scope: &mut Scope<Context>)
         -> Response<Self, Void>
     {
@@ -178,10 +197,11 @@ fn main() {
     fcntl(0, FcntlArg::F_SETFL(O_NONBLOCK)).expect("fcntl");
 
     let conn = handler.add_machine_with(&mut event_loop, |scope| {
-        Composed::Tcp(Tcp::new(conn))
+        Ok(Composed::Tcp(Tcp::new(conn, scope)))
     });
     let stdio = handler.add_machine_with(&mut event_loop, |scope| {
-        Composed::Stdin(Stdin::new(conn2))
+        Ok(Composed::Stdin(Stdin::new(conn2, scope)))
     });
+    assert!(conn.is_ok() && stdio.is_ok());
     event_loop.run(&mut handler).unwrap();
 }

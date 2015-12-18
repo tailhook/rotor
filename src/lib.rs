@@ -5,7 +5,6 @@
 #![crate_name="rotor"]
 
 extern crate mio;
-extern crate void; // to implement traits
 
 use mio::{Token, Sender};
 use std::sync::{Arc, Mutex};
@@ -18,11 +17,9 @@ mod response;
 mod compose;
 mod macros;
 mod machine;
-mod creator;
 
-pub use handler::Handler;
+pub use handler::{Handler, NoSlabSpace};
 pub use machine::Machine;
-pub use creator::{Creator, CreationError};
 pub use scope::Scope;
 pub use loop_api::LoopApi;
 

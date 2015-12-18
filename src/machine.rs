@@ -1,14 +1,28 @@
+use std::any::Any;
+use std::error::Error;
 use mio::EventSet;
 
-use {Response, Scope, Creator, CreationError};
+use {Response, Scope};
 
 
 pub trait Machine<C>: Sized {
-    type Creator: Creator<C, Machine=Self>;
+    /// Seed is piece of data that is needed to initialize the machine
+    ///
+    /// It needs Any because it's put into Box<Error> object when state machine
+    /// is failed to create. Hopefully this is not huge limitation.
+    type Seed: Any+Sized;
+
+    /// Create a machine from some data
+    ///
+    /// The error should be rare enough so that Box<Error> overhead
+    /// is negligible. Most errors here should be resource exhaustion, like
+    /// there are no slots in Slab or system limit on epoll watches exceeded.
+    fn create(seed: Self::Seed, scope: &mut Scope<C>)
+        -> Result<Self, Box<Error>>;
 
     /// Socket readiness notification
     fn ready(self, events: EventSet, scope: &mut Scope<C>)
-        -> Response<Self, Self::Creator>;
+        -> Response<Self, Self::Seed>;
 
     /// Called after spawn event
     ///
@@ -16,7 +30,7 @@ pub trait Machine<C>: Sized {
     /// and return a new state machine from `ready()`. You may wish to accept
     /// another socket right now. This is what `spawned` event is for.
     fn spawned(self, scope: &mut Scope<C>)
-        -> Response<Self, Self::Creator>;
+        -> Response<Self, Self::Seed>;
 
     /// Called instead of spawned, if there is no slab space
     ///
@@ -25,16 +39,15 @@ pub trait Machine<C>: Sized {
     /// again.
     ///
     /// Note: it's useless to spawn from here, so we expect Option<Self> here.
-    fn spawn_error(self, _scope: &mut Scope<C>,
-        _error: CreationError<Self::Creator, <Self::Creator as Creator<C>>::Error>)
+    fn spawn_error(self, _scope: &mut Scope<C>, error: Box<Error>)
         -> Option<Self>
     {
-        panic!("Out of slab space in rotor/mio main loop");
+        panic!("Error spawning state machine: {}", error);
     }
 
     /// Timeout happened
-    fn timeout(self, scope: &mut Scope<C>) -> Response<Self, Self::Creator>;
+    fn timeout(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>;
 
     /// Message received
-    fn wakeup(self, scope: &mut Scope<C>) -> Response<Self, Self::Creator>;
+    fn wakeup(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>;
 }

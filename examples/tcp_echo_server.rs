@@ -1,31 +1,19 @@
 extern crate mio;
 extern crate rotor;
-extern crate void;
 
 use std::io::{Write, stderr};
+use std::error::Error;
 
-use void::Void;
 use mio::{EventSet, PollOpt, TryRead, TryWrite};
 use mio::tcp::{TcpListener, TcpStream};
-use rotor::{Machine, Creator, Response, Scope};
+use rotor::{Machine, Response, Scope};
 
 
 struct Context;
 
-struct ConnCreator(TcpStream);
-
-
 enum Echo {
     Server(TcpListener),
     Connection(TcpStream),
-}
-
-impl Creator<Context> for ConnCreator {
-    type Machine = Echo;
-    type Error = Void;
-    fn create(self, scope: &mut Scope<Context>) -> Result<Echo, Void> {
-        Ok(Echo::connection(self.0, scope))
-    }
 }
 
 impl Echo {
@@ -34,18 +22,12 @@ impl Echo {
             .unwrap();
         Echo::Server(sock)
     }
-    fn connection(sock: TcpStream, scope: &mut Scope<Context>) -> Echo {
-        scope.register(&sock, EventSet::readable(), PollOpt::level())
-            .unwrap();
-        Echo::Connection(sock)
-    }
-    fn accept(self) -> Response<Echo, ConnCreator> {
+    fn accept(self) -> Response<Echo, TcpStream> {
         match self {
             Echo::Server(sock) => {
                 match sock.accept() {
                     Ok(Some((conn, _))) => {
-                        Response::spawn(Echo::Server(sock),
-                                        ConnCreator(conn))
+                        Response::spawn(Echo::Server(sock), conn)
                     }
                     Ok(None) => {
                         Response::ok(Echo::Server(sock))
@@ -62,10 +44,18 @@ impl Echo {
 }
 
 impl Machine<Context> for Echo {
-    type Creator = ConnCreator;
+    type Seed = TcpStream;
+
+    fn create(conn: TcpStream, scope: &mut Scope<Context>)
+        -> Result<Self, Box<Error>>
+    {
+        scope.register(&conn, EventSet::readable(), PollOpt::level())
+            .unwrap();
+        Ok(Echo::Connection(conn))
+    }
 
     fn ready(self, _events: EventSet, _scope: &mut Scope<Context>)
-        -> Response<Self, ConnCreator>
+        -> Response<Self, TcpStream>
     {
         match self {
             me @ Echo::Server(..) => me.accept(),
@@ -74,6 +64,9 @@ impl Machine<Context> for Echo {
                 match sock.try_read(&mut data) {
                     Err(e) => {
                         writeln!(&mut stderr(), "read: {}", e).ok();
+                        Response::done()
+                    }
+                    Ok(Some(0)) => {
                         Response::done()
                     }
                     Ok(Some(x)) => {
@@ -96,7 +89,7 @@ impl Machine<Context> for Echo {
             }
         }
     }
-    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self, ConnCreator>
+    fn spawned(self, _scope: &mut Scope<Context>) -> Response<Self, TcpStream>
     {
         match self {
             me @ Echo::Server(..) => me.accept(),
@@ -104,12 +97,12 @@ impl Machine<Context> for Echo {
         }
     }
     fn timeout(self, _scope: &mut Scope<Context>)
-        -> Response<Self, ConnCreator>
+        -> Response<Self, TcpStream>
     {
         unreachable!();
     }
     fn wakeup(self, _scope: &mut Scope<Context>)
-        -> Response<Self, ConnCreator>
+        -> Response<Self, TcpStream>
     {
         unreachable!();
     }
@@ -120,7 +113,7 @@ fn main() {
     let mut handler = rotor::Handler::new(Context, &mut event_loop);
     let lst = TcpListener::bind(&"127.0.0.1:3000".parse().unwrap()).unwrap();
     let ok = handler.add_machine_with(&mut event_loop, |scope| {
-        Ok::<_, Void>(Echo::new(lst, scope))
+        Ok(Echo::new(lst, scope))
     }).is_ok();
     assert!(ok);
     event_loop.run(&mut handler).unwrap();

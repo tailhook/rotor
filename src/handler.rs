@@ -1,8 +1,12 @@
+use std::fmt;
+use std::any::Any;
+use std::error::Error;
+
 use mio::{self, EventLoop, Token, EventSet, Sender};
 use mio::util::Slab;
 
 use scope::scope;
-use {Scope, Notify, Response, Machine, Creator, CreationError};
+use {Scope, Notify, Response, Machine};
 
 
 pub enum Timeo {
@@ -16,6 +20,8 @@ pub struct Handler<Ctx, M>
     context: Ctx,
     channel: Sender<Notify>,
 }
+
+pub struct NoSlabSpace<S:Any+Sized>(pub S);
 
 impl<C, M> Handler<C, M>
     where M: Machine<C>,
@@ -36,10 +42,9 @@ impl<C, M> Handler<C, M>
 impl<C, M> Handler<C, M>
     where M: Machine<C>
 {
-    pub fn add_machine_with<F, E:Sized>(&mut self,
-        eloop: &mut EventLoop<Self>, fun: F)
-        -> Result<(), CreationError<(), E>>
-        where F: FnOnce(&mut Scope<C>) -> Result<M, E>
+    pub fn add_machine_with<F>(&mut self,
+        eloop: &mut EventLoop<Self>, fun: F) -> Result<(), Box<Error>>
+        where F: FnOnce(&mut Scope<C>) -> Result<M, Box<Error>>
     {
         let ref mut ctx = self.context;
         let ref mut chan = self.channel;
@@ -56,7 +61,7 @@ impl<C, M> Handler<C, M>
         if res.is_some() {
             Ok(())
         } else {
-            Err(CreationError::OutOfResources(()))
+            Err(Box::new(NoSlabSpace(())))
         }
     }
 
@@ -65,7 +70,7 @@ impl<C, M> Handler<C, M>
 fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     eloop: &mut EventLoop<Handler<C, M>>, token: Token, fun: F)
     where M: Machine<C>,
-          F: FnOnce(M, &mut Scope<C>) -> Response<M, M::Creator>
+          F: FnOnce(M, &mut Scope<C>) -> Response<M, M::Seed>
 {
     let mut creator = None;
     {
@@ -80,14 +85,12 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     while let Some(new) = creator.take() {
         let mut new = Some(new);
         let res = handler.add_machine_with(eloop, |scope| {
-            new.take().unwrap().create(scope)
+            M::create(new.take().unwrap(), scope)
         });
-        if let Err(e) = res {
-            use CreationError::*;
-            let err = match e {
-                OutOfResources(()) => OutOfResources(new.unwrap()),
-                CreatorFailure(e) => CreatorFailure(e),
-            };
+        if let Err(mut err) = res {
+            if let Some(new) = new.take() {
+                err = Box::new(NoSlabSpace(new));
+            }
             let ref mut scope = scope(token, &mut handler.context,
                 &mut handler.channel, eloop);
             handler.slab.replace_with(token, |m| {
@@ -136,3 +139,21 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
     }
 }
 
+impl<S:Any+Sized> fmt::Debug for NoSlabSpace<S> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "NoSlabSpace(<hidden seed>)")
+    }
+}
+impl<S:Any+Sized> fmt::Display for NoSlabSpace<S> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "no slab space available")
+    }
+}
+impl<S:Any+Sized> Error for NoSlabSpace<S> {
+    fn description(&self) -> &'static str {
+        "no slab space available"
+    }
+    fn cause(&self) -> Option<&Error> {
+        None
+    }
+}
