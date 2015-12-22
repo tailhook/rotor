@@ -10,6 +10,10 @@ pub trait Machine<C>: Sized {
     ///
     /// It needs Any because it's put into Box<Error> object when state machine
     /// is failed to create. Hopefully this is not huge limitation.
+    ///
+    /// Note: this is only used to create machines returned by this machine.
+    /// So unless this machine processses accepting socket this should
+    /// probably be Void.
     type Seed: Any+Sized;
 
     /// Create a machine from some data
@@ -17,6 +21,11 @@ pub trait Machine<C>: Sized {
     /// The error should be rare enough so that Box<Error> overhead
     /// is negligible. Most errors here should be resource exhaustion, like
     /// there are no slots in Slab or system limit on epoll watches exceeded.
+    ///
+    /// Note: this method is used internally (by event loop) to create a
+    /// socket from a Seed returned by this machine. This method should
+    /// **not** be used to create machine by external code. Create a
+    /// machine-specific `Type::new` method for the purpose.
     fn create(seed: Self::Seed, scope: &mut Scope<C>)
         -> Result<Self, Box<Error>>;
 
