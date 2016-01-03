@@ -26,6 +26,16 @@ pub struct NoSlabSpace<S:Any+Sized>(pub S);
 impl<C, M> Handler<C, M>
     where M: Machine<C>,
 {
+    pub fn new_with_capacity(context: C, eloop: &mut EventLoop<Handler<C, M>>,
+        capacity: usize)
+        -> Handler<C, M>
+    {
+        Handler {
+            slab: Slab::new(capacity),
+            context: context,
+            channel: eloop.channel(),
+        }
+    }
     pub fn new(context: C, eloop: &mut EventLoop<Handler<C, M>>)
         -> Handler<C, M>
     {
