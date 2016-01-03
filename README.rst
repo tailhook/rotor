@@ -35,6 +35,7 @@ Resources
 * `Asynchronous IO in Rust <https://medium.com/@paulcolomiets/asynchronous-io-in-rust-36b623e7b965>`_
   (random design notes about this library)
 * `Asynchronous IO in Rust (part II) <https://medium.com/@paulcolomiets/async-io-for-rust-part-ii-33b9a7274e67>`_
+* `Async IO in Rust (part III) <https://medium.com/@paulcolomiets/async-io-in-rust-part-iii-cbfd10f17203>`_
 
 
 Benchmarks
