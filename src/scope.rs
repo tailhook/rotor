@@ -46,7 +46,7 @@ fn pair<T:Sized>(token: Token, channel: &Sender<Notify>)
     let arc = Arc::new(Mutex::new(None::<T>));
     let port = Port {
         token: token,
-        contents: arc.clone(),
+        contents: Arc::downgrade(&arc),
         channel: channel.clone(),
     };
     let future = Future {

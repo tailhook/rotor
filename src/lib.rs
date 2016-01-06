@@ -7,7 +7,7 @@
 extern crate mio;
 
 use mio::{Token, Sender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Weak, Mutex};
 
 mod handler;
 mod scope;
@@ -31,7 +31,7 @@ pub enum Notify {
 
 pub struct Port<T: Sized> {
     token: Token,
-    contents: Arc<Mutex<Option<T>>>,
+    contents: Weak<Mutex<Option<T>>>,
     channel: Sender<Notify>,
 }
 
