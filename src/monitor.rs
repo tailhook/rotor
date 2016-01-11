@@ -89,21 +89,19 @@ struct CondInternal<T> {
     data: T,
 }
 
-impl<T> Monitor<T> {
-    pub fn create<C:Sized>(initial_value: T, scope: &Scope<C>)
-        -> (Peer1Monitor<T>, Peer2Token<T>)
-    {
-        let intern = Arc::new(Mutex::new(CondInternal {
-            peer1: Peer::Operating {
-                token: scope::get_token(scope),
-                channel: scope::get_channel(scope),
-                pending: false,
-                },
-            peer2: Peer::Connecting,
-            data: initial_value,
-        }));
-        (Peer1Monitor(intern.clone()), Peer2Token(Some(intern)))
-    }
+pub fn create_pair<C: Sized, T: Sized>(initial_value: T, scope: &Scope<C>)
+    -> (Peer1Monitor<T>, Peer2Token<T>)
+{
+    let intern = Arc::new(Mutex::new(CondInternal {
+        peer1: Peer::Operating {
+            token: scope::get_token(scope),
+            channel: scope::get_channel(scope),
+            pending: false,
+            },
+        peer2: Peer::Connecting,
+        data: initial_value,
+    }));
+    (Peer1Monitor(intern.clone()), Peer2Token(Some(intern)))
 }
 
 
@@ -217,15 +215,16 @@ impl<'a, T> fmt::Debug for Guard<'a, T> {
 
 #[cfg(test)]
 mod test {
-    use super::Monitor;
+    use super::{Monitor, create_pair};
     use test_util::Loop;
+    use std::mem::size_of_val;
 
     #[test]
     fn ping_pong() {
         let mut counter = 0;
         {
             let mut lp = Loop::new(());
-            let (mon1, tok) = Monitor::create(&mut counter, &lp.scope(1));
+            let (mon1, tok) = create_pair(&mut counter, &lp.scope(1));
             let mon2 = tok.connect(&lp.scope(2)).unwrap();
             {
                 let mut guard = mon1.consume().unwrap();
@@ -243,6 +242,40 @@ mod test {
             assert!(mon1.consume().is_none());
         }
         assert_eq!(counter, 6);
+    }
+
+    #[cfg(target_arch="x86_64")]
+    #[test]
+    fn test_peer1_size() {
+        let mut lp = Loop::new(());
+        let (mon1, _tok) = create_pair((), &lp.scope(1));
+        // Should be better with no_drop_flag
+        assert_eq!(size_of_val(&mon1), 16);
+    }
+    #[cfg(target_arch="x86_64")]
+    #[test]
+    fn test_token_size() {
+        let mut lp = Loop::new(());
+        let (_, tok) = create_pair((), &lp.scope(1));
+        // Should be better with no drop_flag
+        assert_eq!(size_of_val(&tok), 16);
+    }
+    #[cfg(target_arch="x86_64")]
+    #[test]
+    fn test_peer2_size() {
+        let mut lp = Loop::new(());
+        let (_mon1, tok) = create_pair((), &lp.scope(1));
+        let mon2 = tok.connect(&lp.scope(2)).unwrap();
+        // Should be better with no_drop_flag
+        assert_eq!(size_of_val(&mon2), 16);
+    }
+    #[cfg(target_arch="x86_64")]
+    #[test]
+    fn test_arc_size() {
+        let mut lp = Loop::new(());
+        let (mon1, _tok) = create_pair((), &lp.scope(1));
+        // Should be better with no_drop_flag
+        assert_eq!(size_of_val(&mon1.0.lock().unwrap()), 24);
     }
 }
 
