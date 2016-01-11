@@ -17,11 +17,15 @@ mod response;
 mod compose;
 mod macros;
 mod machine;
+mod monitor;
+#[cfg(test)] mod test_util;
 
 pub use handler::{Handler, NoSlabSpace};
 pub use machine::Machine;
 pub use scope::Scope;
 pub use loop_api::LoopApi;
+pub use monitor::{Guard as MonitorGuard, Monitor};
+pub use monitor::{Peer1Monitor, Peer2Monitor, Peer2Token};
 
 pub use compose::{Compose2};
 

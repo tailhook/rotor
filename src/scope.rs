@@ -141,43 +141,21 @@ pub fn scope<'x, C, L:LoopApi>(token: Token, ctx: &'x mut C,
     }
 }
 
+pub fn get_token<C>(scope: &Scope<C>) -> Token {
+    scope.token
+}
+pub fn get_channel<C>(scope: &Scope<C>) -> Sender<Notify> {
+    scope.channel.clone()
+}
+
 #[cfg(test)]
 mod test {
-    use std::error::Error;
-    use super::{scope, Scope};
-    use super::super::{Response, Handler, Machine};
-    use mio;
-
-    struct Stub;
-
-    impl<C:Sized> Machine<C> for Stub {
-        type Seed = ();
-        fn create(_seed: Self::Seed, _scope: &mut Scope<C>)
-            -> Result<Self, Box<Error>>
-        { unreachable!() }
-        fn ready(self, _events: mio::EventSet, _scope: &mut Scope<C>)
-            -> Response<Self, Self::Seed>
-        { unreachable!() }
-        fn spawned(self, _scope: &mut Scope<C>)
-            -> Response<Self, Self::Seed>
-        { unreachable!() }
-        fn spawn_error(self, _scope: &mut Scope<C>, _error: Box<Error>)
-            -> Option<Self>
-        { unreachable!() }
-        fn timeout(self, _scope: &mut Scope<C>) -> Response<Self, Self::Seed>
-        { unreachable!() }
-        fn wakeup(self, _scope: &mut Scope<C>) -> Response<Self, Self::Seed>
-        { unreachable!() }
-    }
+    use test_util::Loop;
 
     #[test]
     fn map_scope() {
-        let mut context = (1u32, 2u64);
-        let mut eloop: mio::EventLoop<Handler<(u32, u64), Stub>>;
-        eloop = mio::EventLoop::new().unwrap();
-        let mut chan = eloop.channel();
-        let mut scope = scope(mio::Token(1),
-            &mut context, &mut chan, &mut eloop);
+        let mut lp = Loop::new((1u32, 2u64));
+        let mut scope = lp.scope(1);
         assert_eq!(*scope.map_context(|x| &mut x.0), 1u32);
         assert_eq!(*scope.map_context(|x| &mut x.1), 2u64);
     }
