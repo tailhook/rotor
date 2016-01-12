@@ -7,10 +7,26 @@ use mio::{Token, Sender};
 use scope;
 use {Scope, Notify};
 
+/// A guard that allows to read/write internal state
 pub struct Guard<'a, T:'a>(PeerN, MutexGuard<'a, CondInternal<T>>);
+
+/// A monitor interface for Peer1. Implements Monitor trait
 pub struct Peer1Monitor<T>(Arc<Mutex<CondInternal<T>>>);
+
+/// A monitor interface for Peer2. Implements Monitor trait
 pub struct Peer2Monitor<T>(Arc<Mutex<CondInternal<T>>>);
-pub struct Peer2Token<T>(Option<Arc<Mutex<CondInternal<T>>>>);
+
+/// The Socket is for half-duplex communication.
+///
+/// In other words it allows to access data inside the mutex but
+/// doesn't allow to be woken up by it.
+///
+/// There are two use cases:
+///
+/// * Put Socket to shared place to send messages by many users
+/// * Establish bidirectional relationship via `Peer2Socket::connect`
+pub struct Peer2Socket<T>(Option<Arc<Mutex<CondInternal<T>>>>);
+
 #[derive(Debug)]
 pub struct NoPeer;
 
@@ -90,7 +106,7 @@ struct CondInternal<T> {
 }
 
 pub fn create_pair<C: Sized, T: Sized>(initial_value: T, scope: &Scope<C>)
-    -> (Peer1Monitor<T>, Peer2Token<T>)
+    -> (Peer1Monitor<T>, Peer2Socket<T>)
 {
     let intern = Arc::new(Mutex::new(CondInternal {
         peer1: Peer::Operating {
@@ -101,11 +117,11 @@ pub fn create_pair<C: Sized, T: Sized>(initial_value: T, scope: &Scope<C>)
         peer2: Peer::Connecting,
         data: initial_value,
     }));
-    (Peer1Monitor(intern.clone()), Peer2Token(Some(intern)))
+    (Peer1Monitor(intern.clone()), Peer2Socket(Some(intern)))
 }
 
 
-impl<T> Peer2Token<T> {
+impl<T> Peer2Socket<T> {
     /// Creates a peer's monitor structure consuming token
     ///
     /// # Panics
@@ -130,6 +146,18 @@ impl<T> Peer2Token<T> {
             }
         }
         Ok(Peer2Monitor(arc))
+    }
+}
+
+impl<T> Peer2Socket<T> {
+    pub fn attach<'x>(&'x self) -> Option<Guard<'x, T>> {
+        let guard = self.0.as_ref().unwrap().lock()
+            .expect("monitor lock is poisoned");
+        match guard.peer2 {
+            Peer::Connecting => {},
+            _ => panic!("Socket's state is wrong"),
+        }
+        Some(Guard(PeerN::Second, guard))
     }
 }
 
@@ -184,7 +212,7 @@ impl<T> Drop for Peer2Monitor<T> {
         }).ok();
     }
 }
-impl<T> Drop for Peer2Token<T> {
+impl<T> Drop for Peer2Socket<T> {
     fn drop(&mut self) {
         if let Some(ref arc) = self.0 {
             arc.lock().map(|mut x| {

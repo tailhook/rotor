@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
 
 use {Notify, Future, Port, LoopApi};
-use {Peer1Monitor, Peer2Token};
+use {Peer1Monitor, Peer2Socket};
 use monitor::create_pair;
 
 /// The object that is passed down to every state machine action handler
@@ -133,7 +133,7 @@ impl<'a, C> Scope<'a, C> {
         pair(self.token, self.channel)
     }
     pub fn create_monitor<T:Sized>(&mut self, value: T)
-        -> (Peer1Monitor<T>, Peer2Token<T>)
+        -> (Peer1Monitor<T>, Peer2Socket<T>)
     {
         create_pair(value, self)
     }
