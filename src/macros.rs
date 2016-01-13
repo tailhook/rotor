@@ -29,10 +29,10 @@ macro_rules! rotor_compose {
         $($iname:ident ($itype:ty),)*)
     => {
         enum $cname {
-            $( $iname (<$itype as Machine<$ctx_typ>>::Seed), )*
+            $( $iname (<$itype as Machine>::Seed), )*
         }
-        impl $( <$ctx_name:$ctx_bound> )*
-            $crate::Machine<$ctx_typ> for $name {
+        impl $( <$ctx_name:$ctx_bound> )* $crate::Machine for $name {
+            type Context = $ctx_typ;
             type Seed = $cname;
             fn create(seed: $cname, scope: &mut Scope<$ctx_typ>)
                 -> Result<Self, Box<::std::error::Error>>
@@ -41,13 +41,13 @@ macro_rules! rotor_compose {
                     $( $cname::$iname (x)
                         => $crate::Machine::create(x, scope).map($name::$iname).map_err(|mut e| {
                             if e.is::<$crate::NoSlabSpace<
-                                <$itype as $crate::Machine<$ctx_typ>>::Seed>>() {
+                                <$itype as $crate::Machine>::Seed>>() {
                                 let mut s: $crate::NoSlabSpace<
-                                    <$itype as $crate::Machine<$ctx_typ>>::Seed> =
+                                    <$itype as $crate::Machine>::Seed> =
                                     unsafe { ::std::mem::zeroed() };
                                 ::std::mem::swap(&mut s,
                                     e.downcast_mut::<$crate::NoSlabSpace<
-                                        <$itype as $crate::Machine<$ctx_typ>>::Seed>>().unwrap());
+                                        <$itype as $crate::Machine>::Seed>>().unwrap());
                                 ::std::mem::forget(e);
                                 Box::new($crate::NoSlabSpace(
                                     $cname::$iname(s.0))) as Box<::std::error::Error>

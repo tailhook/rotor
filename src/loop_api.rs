@@ -18,7 +18,7 @@ pub trait LoopApi {
 }
 
 impl<'a, C, M> LoopApi for EventLoop<Handler<C, M>>
-    where M: Machine<C>
+    where M: Machine<Context=C>
 {
     fn register(&mut self, io: &Evented, token: Token,
         interest: EventSet, opt: PollOpt) -> io::Result<()>

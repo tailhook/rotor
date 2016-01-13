@@ -23,7 +23,10 @@ pub enum Compose2Seed<A:Sized, B:Sized> {
     Bs(B),
 }
 
-impl<X, A: Machine<X>, B:Machine<X>> Machine<X> for Compose2<A, B> {
+impl<X, A, B> Machine for Compose2<A, B>
+    where A: Machine<Context=X>, B:Machine<Context=X>
+{
+    type Context = X;
     type Seed = Compose2Seed<A::Seed, B::Seed>;
 
     fn create(seed: Self::Seed, scope: &mut Scope<X>)
