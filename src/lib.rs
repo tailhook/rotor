@@ -25,7 +25,8 @@ pub use machine::Machine;
 pub use scope::Scope;
 pub use loop_api::LoopApi;
 pub use monitor::{Guard as MonitorGuard, Monitor};
-pub use monitor::{Peer1Monitor, Peer2Monitor, Peer2Socket};
+pub use monitor::{Peer1Monitor, Peer2Monitor, Peer1Socket, Peer2Socket};
+pub use monitor::{create_pair};
 
 pub use compose::{Compose2};
 

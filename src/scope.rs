@@ -135,7 +135,8 @@ impl<'a, C> Scope<'a, C> {
     pub fn create_monitor<T:Sized>(&mut self, value: T)
         -> (Peer1Monitor<T>, Peer2Socket<T>)
     {
-        create_pair(value, self)
+        let (p1, p2) = create_pair(value);
+        (p1.initiate(self), p2)
     }
 }
 

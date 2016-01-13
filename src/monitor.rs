@@ -16,6 +16,7 @@ pub struct Peer1Monitor<T>(Arc<Mutex<CondInternal<T>>>);
 /// A monitor interface for Peer2. Implements Monitor trait
 pub struct Peer2Monitor<T>(Arc<Mutex<CondInternal<T>>>);
 
+pub struct Peer1Socket<T>(Option<Arc<Mutex<CondInternal<T>>>>);
 /// The Socket is for half-duplex communication.
 ///
 /// In other words it allows to access data inside the mutex but
@@ -105,21 +106,43 @@ struct CondInternal<T> {
     data: T,
 }
 
-pub fn create_pair<C: Sized, T: Sized>(initial_value: T, scope: &Scope<C>)
-    -> (Peer1Monitor<T>, Peer2Socket<T>)
+/// This creates pair of sockets, which may then be turned to monitors
+///
+/// Usually you should use ``Scope::create_monitor`` instead
+pub fn create_pair<T: Sized>(initial_value: T)
+    -> (Peer1Socket<T>, Peer2Socket<T>)
 {
     let intern = Arc::new(Mutex::new(CondInternal {
-        peer1: Peer::Operating {
-            token: scope::get_token(scope),
-            channel: scope::get_channel(scope),
-            pending: false,
-            },
+        peer1: Peer::Connecting,
         peer2: Peer::Connecting,
         data: initial_value,
     }));
-    (Peer1Monitor(intern.clone()), Peer2Socket(Some(intern)))
+    (Peer1Socket(Some(intern.clone())), Peer2Socket(Some(intern)))
 }
 
+impl<T> Peer1Socket<T> {
+    /// Creates a peer's monitor structure consuming token
+    ///
+    /// # Panics
+    ///
+    /// When underlying mutex is poisoned
+    // TODO(tailhook) better error?
+    pub fn initiate<C:Sized>(mut self, scope: &Scope<C>)
+        -> Peer1Monitor<T>
+    {
+        let arc = self.0.take().unwrap();
+        {
+            let mut guard = Guard(PeerN::First,
+                arc.lock().expect("monitor lock is poisoned"));
+            guard.1.peer1 = Peer::Operating {
+                token: scope::get_token(scope),
+                channel: scope::get_channel(scope),
+                pending: false,
+                };
+        }
+        Peer1Monitor(arc)
+    }
+}
 
 impl<T> Peer2Socket<T> {
     /// Creates a peer's monitor structure consuming token
@@ -212,6 +235,18 @@ impl<T> Drop for Peer2Monitor<T> {
         }).ok();
     }
 }
+
+impl<T> Drop for Peer1Socket<T> {
+    fn drop(&mut self) {
+        if let Some(ref arc) = self.0 {
+            arc.lock().map(|mut x| {
+                x.deref_mut().peer1 = Peer::Closed;
+                Guard(PeerN::First, x).notify_peer()
+            }).ok();
+        }
+    }
+}
+
 impl<T> Drop for Peer2Socket<T> {
     fn drop(&mut self) {
         if let Some(ref arc) = self.0 {
@@ -252,8 +287,9 @@ mod test {
         let mut counter = 0;
         {
             let mut lp = Loop::new(());
-            let (mon1, tok) = create_pair(&mut counter, &lp.scope(1));
-            let mon2 = tok.connect(&lp.scope(2)).unwrap();
+            let (tok1, tok2) = create_pair(&mut counter);
+            let mon1 = tok1.initiate(&lp.scope(1));
+            let mon2 = tok2.connect(&lp.scope(2)).unwrap();
             {
                 let mut guard = mon1.consume().unwrap();
                 **guard = 3;
@@ -276,15 +312,15 @@ mod test {
     #[test]
     fn test_peer1_size() {
         let mut lp = Loop::new(());
-        let (mon1, _tok) = create_pair((), &lp.scope(1));
+        let (tok1, _tok) = create_pair(());
+        let mon1 = tok1.initiate(&lp.scope(1));
         // Should be better with no_drop_flag
         assert_eq!(size_of_val(&mon1), 16);
     }
     #[cfg(target_arch="x86_64")]
     #[test]
     fn test_token_size() {
-        let mut lp = Loop::new(());
-        let (_, tok) = create_pair((), &lp.scope(1));
+        let (_, tok) = create_pair(());
         // Should be better with no drop_flag
         assert_eq!(size_of_val(&tok), 16);
     }
@@ -292,7 +328,8 @@ mod test {
     #[test]
     fn test_peer2_size() {
         let mut lp = Loop::new(());
-        let (_mon1, tok) = create_pair((), &lp.scope(1));
+        let (tok1, tok) = create_pair(());
+        let _mon1 = tok1.initiate(&lp.scope(1));
         let mon2 = tok.connect(&lp.scope(2)).unwrap();
         // Should be better with no_drop_flag
         assert_eq!(size_of_val(&mon2), 16);
@@ -301,7 +338,8 @@ mod test {
     #[test]
     fn test_arc_size() {
         let mut lp = Loop::new(());
-        let (mon1, _tok) = create_pair((), &lp.scope(1));
+        let (tok1, _tok) = create_pair(());
+        let mon1 = tok1.initiate(&lp.scope(1));
         // Should be better with no_drop_flag
         assert_eq!(size_of_val(&mon1.0.lock().unwrap()), 24);
     }
