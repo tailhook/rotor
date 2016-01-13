@@ -6,7 +6,11 @@ use {Response, Scope};
 
 
 /// A trait that every state machine in the loop must implement
-pub trait Machine<C>: Sized {
+pub trait Machine: Sized {
+    /// Context type for the state machine
+    ///
+    /// This is a container of the global state for the application
+    type Context;
     /// Seed is piece of data that is needed to initialize the machine
     ///
     /// It needs Any because it's put into Box<Error> object when state machine
@@ -27,11 +31,11 @@ pub trait Machine<C>: Sized {
     /// socket from a Seed returned by this machine. This method should
     /// **not** be used to create machine by external code. Create a
     /// machine-specific `Type::new` method for the purpose.
-    fn create(seed: Self::Seed, scope: &mut Scope<C>)
+    fn create(seed: Self::Seed, scope: &mut Scope<Self::Context>)
         -> Result<Self, Box<Error>>;
 
     /// Socket readiness notification
-    fn ready(self, events: EventSet, scope: &mut Scope<C>)
+    fn ready(self, events: EventSet, scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>;
 
     /// Called after spawn event
@@ -39,7 +43,7 @@ pub trait Machine<C>: Sized {
     /// This is mostly a continuation event. I.e. when you accept a socket
     /// and return a new state machine from `ready()`. You may wish to accept
     /// another socket right now. This is what `spawned` event is for.
-    fn spawned(self, scope: &mut Scope<C>)
+    fn spawned(self, scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>;
 
     /// Called instead of spawned, if there is no slab space
@@ -49,15 +53,17 @@ pub trait Machine<C>: Sized {
     /// again.
     ///
     /// Note: it's useless to spawn from here, so we expect Option<Self> here.
-    fn spawn_error(self, _scope: &mut Scope<C>, error: Box<Error>)
+    fn spawn_error(self, _scope: &mut Scope<Self::Context>, error: Box<Error>)
         -> Option<Self>
     {
         panic!("Error spawning state machine: {}", error);
     }
 
     /// Timeout happened
-    fn timeout(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>;
+    fn timeout(self, scope: &mut Scope<Self::Context>)
+        -> Response<Self, Self::Seed>;
 
     /// Message received
-    fn wakeup(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>;
+    fn wakeup(self, scope: &mut Scope<Self::Context>)
+        -> Response<Self, Self::Seed>;
 }

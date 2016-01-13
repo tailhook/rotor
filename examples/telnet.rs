@@ -49,7 +49,8 @@ impl Tcp {
     }
 }
 
-impl Machine<Context> for Tcp {
+impl Machine for Tcp {
+    type Context = Context;
     type Seed = Void;
     fn create(seed: Void, _scope: &mut Scope<Context>)
         -> Result<Self, Box<Error>>
@@ -118,7 +119,8 @@ impl Stdin {
     }
 }
 
-impl Machine<Context> for Stdin {
+impl Machine for Stdin {
+    type Context = Context;
     type Seed = Void;
     fn create(seed: Void, _scope: &mut Scope<Context>)
         -> Result<Self, Box<Error>>

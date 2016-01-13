@@ -36,7 +36,7 @@ pub enum Notify {
 /// event_loop.run(&mut handler).unwrap();
 /// ```
 pub struct Handler<Ctx, M>
-    where M: Machine<Ctx>
+    where M: Machine<Context=Ctx>
 {
     slab: Slab<M>,
     context: Ctx,
@@ -49,7 +49,7 @@ pub struct Handler<Ctx, M>
 pub struct NoSlabSpace<S:Any+Sized>(pub S);
 
 impl<C, M> Handler<C, M>
-    where M: Machine<C>,
+    where M: Machine<Context=C>,
 {
     pub fn new_with_capacity(context: C, eloop: &mut EventLoop<Handler<C, M>>,
         capacity: usize)
@@ -75,7 +75,7 @@ impl<C, M> Handler<C, M>
 }
 
 impl<C, M> Handler<C, M>
-    where M: Machine<C>
+    where M: Machine<Context=C>
 {
     pub fn add_machine_with<F>(&mut self,
         eloop: &mut EventLoop<Self>, fun: F) -> Result<(), Box<Error>>
@@ -104,7 +104,7 @@ impl<C, M> Handler<C, M>
 
 fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     eloop: &mut EventLoop<Handler<C, M>>, token: Token, fun: F)
-    where M: Machine<C>,
+    where M: Machine<Context=C>,
           F: FnOnce(M, &mut Scope<C>) -> Response<M, M::Seed>
 {
     let mut creator = None;
@@ -145,7 +145,7 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
 }
 
 impl<Ctx, M> mio::Handler for Handler<Ctx, M>
-    where M: Machine<Ctx>
+    where M: Machine<Context=Ctx>
 {
     type Message = Notify;
     type Timeout = Timeo;

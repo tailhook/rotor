@@ -43,7 +43,8 @@ impl Echo {
     }
 }
 
-impl Machine<Context> for Echo {
+impl Machine for Echo {
+    type Context = Context;
     type Seed = TcpStream;
 
     fn create(conn: TcpStream, scope: &mut Scope<Context>)
