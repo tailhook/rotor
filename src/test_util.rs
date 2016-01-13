@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::error::Error;
 
 use mio;
@@ -5,9 +6,10 @@ use mio;
 use scope::{scope, Scope};
 use {Response, Handler, Machine, Notify};
 
-pub struct Stub;
+pub struct Stub<C>(PhantomData<*const C>);
 
-impl<C:Sized> Machine<C> for Stub {
+impl<C> Machine for Stub<C> {
+    type Context = C;
     type Seed = ();
     fn create(_seed: Self::Seed, _scope: &mut Scope<C>)
         -> Result<Self, Box<Error>>
@@ -28,7 +30,7 @@ impl<C:Sized> Machine<C> for Stub {
 }
 
 pub struct Loop<C> {
-    eloop: mio::EventLoop<Handler<C, Stub>>,
+    eloop: mio::EventLoop<Handler<C, Stub<C>>>,
     chan: mio::Sender<Notify>,
     pub ctx: C,
 }
