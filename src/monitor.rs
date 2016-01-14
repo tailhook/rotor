@@ -60,7 +60,7 @@ impl<'a, T> Guard<'a, T> {
     /// # Panics
     ///
     /// When notify queue in mio is full the method panics.
-    fn notify_peer(mut self) -> Result<bool, Guard<'a, T>> {
+    pub fn notify_peer(mut self) -> Result<bool, Guard<'a, T>> {
         {
             let peer = match self.0 {
                 // Notify the opposite peer
