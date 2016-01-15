@@ -1,10 +1,10 @@
 use std::io;
-use std::sync::{Arc, Mutex};
 use std::ops::{Deref, DerefMut};
 
 use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
 
-use {Notify, Future, Port, LoopApi};
+use handler::Notify;
+use {LoopApi};
 
 pub struct Scope<'a, C:Sized+'a>{
     token: Token,
@@ -40,22 +40,6 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     }
 }
 
-fn pair<T:Sized>(token: Token, channel: &Sender<Notify>)
-    -> (Port<T>, Future<T>)
-{
-    let arc = Arc::new(Mutex::new(None::<T>));
-    let port = Port {
-        token: token,
-        contents: arc.clone(),
-        channel: channel.clone(),
-    };
-    let future = Future {
-        contents: arc,
-    };
-    return (port, future);
-}
-
-
 impl<'a, C> Deref for Scope<'a, C> {
     type Target = C;
     fn deref(&self) -> &C {
@@ -66,12 +50,6 @@ impl<'a, C> Deref for Scope<'a, C> {
 impl<'a, C> DerefMut for Scope<'a, C> {
     fn deref_mut(&mut self) -> &mut C {
         self.ctx
-    }
-}
-
-impl<'a, C> Scope<'a, C> {
-    pub fn create_future<T:Sized>(&mut self) -> (Port<T>, Future<T>) {
-        pair(self.token, self.channel)
     }
 }
 

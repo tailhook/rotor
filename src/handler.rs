@@ -6,12 +6,17 @@ use mio::{self, EventLoop, Token, EventSet, Sender};
 use mio::util::Slab;
 
 use scope::scope;
-use {Scope, Notify, Response, Machine};
+use {Scope, Response, Machine};
 
 
 pub enum Timeo {
     Fsm(Token),
 }
+
+pub enum Notify {
+    Fsm(Token),
+}
+
 
 pub struct Handler<Ctx, M>
     where M: Machine<Ctx>

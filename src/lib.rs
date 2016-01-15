@@ -6,12 +6,8 @@
 
 extern crate mio;
 
-use mio::{Token, Sender};
-use std::sync::{Arc, Mutex};
-
 mod handler;
 mod scope;
-mod future;
 mod loop_api;
 mod response;
 mod compose;
@@ -24,20 +20,6 @@ pub use scope::Scope;
 pub use loop_api::LoopApi;
 
 pub use compose::{Compose2};
-
-pub enum Notify {
-    Fsm(Token),
-}
-
-pub struct Port<T: Sized> {
-    token: Token,
-    contents: Arc<Mutex<Option<T>>>,
-    channel: Sender<Notify>,
-}
-
-pub struct Future<T: Sized> {
-    contents: Arc<Mutex<Option<T>>>,
-}
 
 // The following struct is not enum
 // merely to keep internal structure private
