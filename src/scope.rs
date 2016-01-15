@@ -1,12 +1,13 @@
 use std::io;
 use std::ops::{Deref, DerefMut};
 
-use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
+use mio::{Token, Sender};
 
 use handler::Notify;
 use loop_api::LoopApi;
 use notify::create_notifier;
 use {Notifier};
+use {Evented, EventSet, PollOpt, Timeout, TimerError};
 
 /// The structure passed to every action handler
 ///

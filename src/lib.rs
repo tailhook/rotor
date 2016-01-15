@@ -4,7 +4,7 @@
 //!
 #![crate_name="rotor"]
 
-extern crate mio;
+extern crate mio as mio_original;
 #[macro_use] extern crate quick_error;
 
 mod handler;
@@ -22,6 +22,12 @@ pub use scope::Scope;
 pub use notify::Notifier;
 
 pub use compose::{Compose2};
+
+// Re-export mio types used in rotor
+pub use mio::{EventSet, Evented, PollOpt, EventLoop};
+pub use mio::{Timeout, TimerError};
+pub use mio_original as mio;
+
 
 /// The response of a state machine to the (mio) action
 ///

@@ -1,11 +1,11 @@
-extern crate mio;
 extern crate rotor;
 
 use std::io::{Write, stderr};
 use std::error::Error;
 
-use mio::{EventSet, PollOpt, TryRead, TryWrite};
-use mio::tcp::{TcpListener, TcpStream};
+use rotor::{EventSet, PollOpt, EventLoop};
+use rotor::mio::{TryRead, TryWrite};
+use rotor::mio::tcp::{TcpListener, TcpStream};
 use rotor::{Machine, Response, Scope};
 
 
@@ -110,7 +110,7 @@ impl Machine for Echo {
 }
 
 fn main() {
-    let mut event_loop = mio::EventLoop::new().unwrap();
+    let mut event_loop = EventLoop::new().unwrap();
     let mut handler = rotor::Handler::new(Context, &mut event_loop);
     let lst = TcpListener::bind(&"127.0.0.1:3000".parse().unwrap()).unwrap();
     let ok = handler.add_machine_with(&mut event_loop, |scope| {

@@ -1,4 +1,3 @@
-extern crate mio;
 extern crate nix;
 #[macro_use] extern crate rotor;
 extern crate argparse;
@@ -9,9 +8,10 @@ use std::io::{Write, stderr, stdout};
 use std::os::unix::io::FromRawFd;
 
 use void::{Void, unreachable};
-use mio::{EventSet, PollOpt, TryRead, TryWrite};
-use mio::tcp::{TcpStream};
-use mio::unix::{UnixStream};
+use rotor::{EventSet, PollOpt, EventLoop};
+use rotor::mio::{TryRead, TryWrite};
+use rotor::mio::tcp::{TcpStream};
+use rotor::mio::unix::{UnixStream};
 use nix::fcntl::{fcntl, FcntlArg, O_NONBLOCK};
 use rotor::{Machine, Response, Scope}; // Compose2
 use argparse::{ArgumentParser, Store};
@@ -186,7 +186,7 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let mut event_loop = mio::EventLoop::new().unwrap();
+    let mut event_loop = EventLoop::new().unwrap();
     let mut handler = rotor::Handler::new(Context, &mut event_loop);
 
     let conn = TcpStream::connect(

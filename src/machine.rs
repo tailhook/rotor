@@ -1,8 +1,7 @@
 use std::any::Any;
 use std::error::Error;
-use mio::EventSet;
 
-use {Response, Scope};
+use {Response, Scope, EventSet};
 
 
 /// A trait that every state machine in the loop must implement
