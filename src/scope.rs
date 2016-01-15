@@ -5,15 +5,26 @@ use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
 
 use handler::Notify;
 use loop_api::LoopApi;
+use notify::create_notifier;
+use {Notifier};
 
 /// The structure passed to every action handler
 ///
-/// Scope is used for the follow purposes:
+/// Scope is used for the following purposes:
 ///
 /// 1. Register/deregister sockets in the event loop
 /// 2. Register timeouts
-/// 3. Create a special `Wakeup` object to allow wakeup sibling state machines
+/// 3. Create a special `Notifier` object to wakeup sibling state machines
 /// 4. Access to global state of the loop (Context)
+///
+/// All methods here operate on **enclosed state machine**, which means the
+/// state machine that was called with this scope. Or in other words the
+/// state machine that actually performs an action.
+///
+/// The only way to notify another state machine is to create a `notifier()`
+/// (the `Notifier` is only able to wakeup this state machine still), transfer
+/// it to another state machine (for example putting it into the context)
+/// and call `Notifier::wakeup()`.
 ///
 /// The structure derefs to the context (``C``) for convenience
 pub struct Scope<'a, C:Sized+'a>{
@@ -47,6 +58,10 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     pub fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.loop_api.clear_timeout(token)
+    }
+    /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
+    pub fn notifier(&mut self) -> Notifier {
+        create_notifier(self.token, self.channel)
     }
 }
 

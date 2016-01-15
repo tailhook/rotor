@@ -5,6 +5,7 @@
 #![crate_name="rotor"]
 
 extern crate mio;
+#[macro_use] extern crate quick_error;
 
 mod handler;
 mod scope;
@@ -13,10 +14,12 @@ mod response;
 mod compose;
 mod macros;
 mod machine;
+mod notify;
 
 pub use handler::{Handler, NoSlabSpace};
 pub use machine::Machine;
 pub use scope::Scope;
+pub use notify::Notifier;
 
 pub use compose::{Compose2};
 
