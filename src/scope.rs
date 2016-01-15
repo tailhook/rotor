@@ -4,8 +4,18 @@ use std::ops::{Deref, DerefMut};
 use mio::{Token, Sender, Evented, EventSet, PollOpt, Timeout, TimerError};
 
 use handler::Notify;
-use {LoopApi};
+use loop_api::LoopApi;
 
+/// The structure passed to every action handler
+///
+/// Scope is used for the follow purposes:
+///
+/// 1. Register/deregister sockets in the event loop
+/// 2. Register timeouts
+/// 3. Create a special `Wakeup` object to allow wakeup sibling state machines
+/// 4. Access to global state of the loop (Context)
+///
+/// The structure derefs to the context (``C``) for convenience
 pub struct Scope<'a, C:Sized+'a>{
     token: Token,
     ctx: &'a mut C,

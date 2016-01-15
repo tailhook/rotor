@@ -17,10 +17,12 @@ mod machine;
 pub use handler::{Handler, NoSlabSpace};
 pub use machine::Machine;
 pub use scope::Scope;
-pub use loop_api::LoopApi;
 
 pub use compose::{Compose2};
 
+/// The response of a state machine to the (mio) action
+///
+/// This value is returned by many methods of the `Machine` trait.
 // The following struct is not enum
 // merely to keep internal structure private
 pub struct Response<M, N>(Option<M>, Option<N>);

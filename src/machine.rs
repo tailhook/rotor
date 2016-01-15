@@ -5,6 +5,7 @@ use mio::EventSet;
 use {Response, Scope};
 
 
+/// A trait that every state machine in the loop must implement
 pub trait Machine<C>: Sized {
     /// Seed is piece of data that is needed to initialize the machine
     ///

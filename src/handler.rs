@@ -18,6 +18,23 @@ pub enum Notify {
 }
 
 
+/// Standard mio loop handler
+///
+///
+/// # Examples
+///
+/// ```ignore
+/// extern crate mio;
+/// extern crate rotor;
+///
+/// let mut event_loop = mio::EventLoop::new().unwrap();
+/// let mut handler = rotor::Handler::new(Context, &mut event_loop);
+/// let conn = handler.add_machine_with(&mut event_loop, |scope| {
+///     Ok(StateMachineConstuctor(..))
+/// });
+/// assert!(conn.is_ok());
+/// event_loop.run(&mut handler).unwrap();
+/// ```
 pub struct Handler<Ctx, M>
     where M: Machine<Ctx>
 {
@@ -26,6 +43,9 @@ pub struct Handler<Ctx, M>
     channel: Sender<Notify>,
 }
 
+/// Slab reached it's capacity limit
+///
+/// This error is passed to the `spawn_error` handler
 pub struct NoSlabSpace<S:Any+Sized>(pub S);
 
 impl<C, M> Handler<C, M>
