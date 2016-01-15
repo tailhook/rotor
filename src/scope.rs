@@ -36,17 +36,20 @@ pub struct Scope<'a, C:Sized+'a>{
 }
 
 impl<'a, C:Sized+'a> Scope<'a, C> {
+
     pub fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
         -> io::Result<()>
     {
         self.loop_api.register(io, self.token, interest, opt)
     }
+
     pub fn reregister(&mut self, io: &Evented,
         interest: EventSet, opt: PollOpt)
         -> io::Result<()>
     {
         self.loop_api.reregister(io, self.token, interest, opt)
     }
+
     pub fn deregister(&mut self, io: &Evented) -> io::Result<()>
     {
         self.loop_api.deregister(io)
@@ -56,13 +59,20 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     {
         self.loop_api.timeout_ms(self.token, delay)
     }
+
     pub fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.loop_api.clear_timeout(token)
     }
+
     /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
     pub fn notifier(&mut self) -> Notifier {
         create_notifier(self.token, self.channel)
+    }
+
+    /// Shutdown the event loop
+    pub fn shutdown_loop(&mut self) {
+        self.loop_api.shutdown()
     }
 }
 

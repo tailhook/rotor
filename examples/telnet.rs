@@ -76,9 +76,11 @@ impl Machine for Tcp {
                         // more since Response::done()
                         scope.deregister(&sock).unwrap();
                         writeln!(&mut stderr(), "read: {}", e).ok();
+                        scope.shutdown_loop();
                         Response::done()
                     }
                     Ok(Some(0)) => {
+                        scope.shutdown_loop();
                         Response::done()
                     }
                     Ok(Some(x)) => {
@@ -127,25 +129,31 @@ impl Machine for Stdin {
     {
         unreachable(seed);
     }
-    fn ready(mut self, _events: EventSet, _scope: &mut Scope<Context>)
+    fn ready(mut self, _events: EventSet, scope: &mut Scope<Context>)
         -> Response<Self, Void>
     {
         let mut data = [0u8; 1024];
         match self.input.try_read(&mut data) {
             Err(e) => {
                 writeln!(&mut stderr(), "read: {}", e).ok();
+                scope.shutdown_loop();
                 return Response::done()
             }
             Ok(Some(x)) => {
                 // We don't check the result, for making example
                 // super-simple.
                 match self.output.try_write(&data[..x]) {
+                    Ok(Some(0)) => {
+                        scope.shutdown_loop();
+                        return Response::done()
+                    }
                     Ok(_) => {
                         // this is example so we don't care if not all
                         // (or none at all) bytes are written
                     }
                     Err(e) => {
                         writeln!(&mut stderr(), "write: {}", e).ok();
+                        scope.shutdown_loop();
                         return Response::done()
                     }
                 }

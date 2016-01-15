@@ -16,6 +16,7 @@ pub trait LoopApi {
     fn timeout_ms(&mut self, token: Token, delay: u64)
         -> Result<Timeout, TimerError>;
     fn clear_timeout(&mut self, token: Timeout) -> bool;
+    fn shutdown(&mut self);
 }
 
 impl<'a, C, M> LoopApi for EventLoop<Handler<C, M>>
@@ -46,5 +47,8 @@ impl<'a, C, M> LoopApi for EventLoop<Handler<C, M>>
     fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.clear_timeout(token)
+    }
+    fn shutdown(&mut self) {
+        self.shutdown()
     }
 }
