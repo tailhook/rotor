@@ -49,7 +49,7 @@ impl Notifier {
     /// Wakeup a state machine
     ///
     ///
-    pub fn wakeup(self) -> Result<(), WakeupError> {
+    pub fn wakeup(&self) -> Result<(), WakeupError> {
         use mio::NotifyError::*;
         match self.channel.send(Notify::Fsm(self.token)) {
             Ok(()) => Ok(()),
