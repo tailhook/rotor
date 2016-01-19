@@ -34,7 +34,7 @@ macro_rules! rotor_compose {
         impl $( <$ctx_name:$ctx_bound> )* $crate::Machine for $name {
             type Context = $ctx_typ;
             type Seed = $cname;
-            fn create(seed: $cname, scope: &mut Scope<$ctx_typ>)
+            fn create(seed: $cname, scope: &mut $crate::Scope<$ctx_typ>)
                 -> Result<Self, Box<::std::error::Error>>
             {
                 match seed {
@@ -58,7 +58,8 @@ macro_rules! rotor_compose {
                     )*
                 }
             }
-            fn ready(self, events: EventSet, scope: &mut Scope<$ctx_typ>)
+            fn ready(self, events: EventSet,
+                scope: &mut $crate::Scope<$ctx_typ>)
                 -> $crate::Response<Self, Self::Seed>
             {
                 match self {
@@ -70,7 +71,7 @@ macro_rules! rotor_compose {
                     )*
                 }
             }
-            fn spawned(self, scope: &mut Scope<$ctx_typ>)
+            fn spawned(self, scope: &mut $crate::Scope<$ctx_typ>)
                 -> $crate::Response<Self, Self::Seed>
             {
                 match self {
@@ -82,7 +83,7 @@ macro_rules! rotor_compose {
                     )*
                 }
             }
-            fn timeout(self, scope: &mut Scope<$ctx_typ>)
+            fn timeout(self, scope: &mut $crate::Scope<$ctx_typ>)
                 -> $crate::Response<Self, Self::Seed>
             {
                 match self {
@@ -94,7 +95,7 @@ macro_rules! rotor_compose {
                     )*
                 }
             }
-            fn wakeup(self, scope: &mut Scope<$ctx_typ>)
+            fn wakeup(self, scope: &mut $crate::Scope<$ctx_typ>)
                 -> $crate::Response<Self, Self::Seed>
             {
                 match self {

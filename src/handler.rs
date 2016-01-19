@@ -74,6 +74,17 @@ impl<C, M> Handler<C, M>
     }
 }
 
+pub fn create_handler<C, M>(slab: Slab<M>, context: C, channel: Sender<Notify>)
+    -> Handler<C, M>
+    where M: Machine<Context=C>
+{
+    Handler {
+        slab: slab,
+        context: context,
+        channel: channel,
+    }
+}
+
 impl<C, M> Handler<C, M>
     where M: Machine<Context=C>
 {
@@ -192,3 +203,4 @@ impl<S:Any+Sized> Error for NoSlabSpace<S> {
         None
     }
 }
+

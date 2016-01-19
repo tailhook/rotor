@@ -15,16 +15,20 @@ mod compose;
 mod macros;
 mod machine;
 mod notify;
+mod config;
+mod creator;
 
 pub use handler::{Handler, NoSlabSpace};
 pub use machine::Machine;
-pub use scope::Scope;
+pub use scope::{Scope, EarlyScope, GenericScope};
 pub use notify::Notifier;
+pub use config::Config;
+pub use creator::{LoopCreator as Loop};
 
 pub use compose::{Compose2};
 
 // Re-export mio types used in rotor
-pub use mio::{EventSet, Evented, PollOpt, EventLoop};
+pub use mio::{EventSet, Evented, PollOpt};
 pub use mio::{Timeout, TimerError};
 pub use mio_original as mio;
 

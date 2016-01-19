@@ -8,12 +8,12 @@ use std::io::{Write, stderr, stdout};
 use std::os::unix::io::FromRawFd;
 
 use void::{Void, unreachable};
-use rotor::{EventSet, PollOpt, EventLoop};
+use rotor::{EventSet, PollOpt};
 use rotor::mio::{TryRead, TryWrite};
 use rotor::mio::tcp::{TcpStream};
 use rotor::mio::unix::{UnixStream};
 use nix::fcntl::{fcntl, FcntlArg, O_NONBLOCK};
-use rotor::{Machine, Response, Scope}; // Compose2
+use rotor::{Machine, Response, Scope, EarlyScope}; // Compose2
 use argparse::{ArgumentParser, Store};
 
 
@@ -41,7 +41,7 @@ rotor_compose!(enum Composed/CSeed <Context> {
 // ^^ note that enum names are different, you need to fix them below
 
 impl Tcp {
-    fn new(sock: TcpStream, scope: &mut Scope<Context>) -> Tcp
+    fn new(sock: TcpStream, scope: &mut EarlyScope) -> Tcp
     {
         scope.register(&sock, EventSet::writable(), PollOpt::level())
             .unwrap();
@@ -109,7 +109,7 @@ impl Machine for Tcp {
 }
 
 impl Stdin {
-    fn new(dest: TcpStream, scope: &mut Scope<Context>) -> Stdin
+    fn new(dest: TcpStream, scope: &mut EarlyScope) -> Stdin
     {
         let stdin = unsafe { UnixStream::from_raw_fd(0) };
         scope.register(&stdin, EventSet::readable(), PollOpt::level())
@@ -194,8 +194,7 @@ fn main() {
         ap.parse_args_or_exit();
     }
 
-    let mut event_loop = EventLoop::new().unwrap();
-    let mut handler = rotor::Handler::new(Context, &mut event_loop);
+    let mut loop_creator = rotor::Loop::new(&rotor::Config::new()).unwrap();
 
     let conn = TcpStream::connect(
         // Any better way for current stable rust?
@@ -206,12 +205,12 @@ fn main() {
     // This isn't a good idea for the real work
     fcntl(0, FcntlArg::F_SETFL(O_NONBLOCK)).expect("fcntl");
 
-    let conn = handler.add_machine_with(&mut event_loop, |scope| {
+    let conn = loop_creator.add_machine_with(|scope| {
         Ok(Composed::Tcp(Tcp::new(conn, scope)))
     });
-    let stdio = handler.add_machine_with(&mut event_loop, |scope| {
+    let stdio = loop_creator.add_machine_with(|scope| {
         Ok(Composed::Stdin(Stdin::new(conn2, scope)))
     });
     assert!(conn.is_ok() && stdio.is_ok());
-    event_loop.run(&mut handler).unwrap();
+    loop_creator.run(Context).unwrap();
 }

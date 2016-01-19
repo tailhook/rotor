@@ -1,10 +1,10 @@
 use std::io;
 
-use mio::{Token};
+use mio::{Token, EventLoop};
 
 use handler::{Handler, Timeo};
 use {Machine};
-use {Evented, EventSet, PollOpt, EventLoop, Timeout, TimerError};
+use {Evented, EventSet, PollOpt, Timeout, TimerError};
 
 
 pub trait LoopApi {

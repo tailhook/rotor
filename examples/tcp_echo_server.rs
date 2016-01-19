@@ -3,10 +3,10 @@ extern crate rotor;
 use std::io::{Write, stderr};
 use std::error::Error;
 
-use rotor::{EventSet, PollOpt, EventLoop};
+use rotor::{EventSet, PollOpt, Loop, Config};
 use rotor::mio::{TryRead, TryWrite};
 use rotor::mio::tcp::{TcpListener, TcpStream};
-use rotor::{Machine, Response, Scope};
+use rotor::{Machine, Response, EarlyScope, Scope};
 
 
 struct Context;
@@ -17,7 +17,7 @@ enum Echo {
 }
 
 impl Echo {
-    pub fn new(sock: TcpListener, scope: &mut Scope<Context>) -> Echo {
+    pub fn new(sock: TcpListener, scope: &mut EarlyScope) -> Echo {
         scope.register(&sock, EventSet::readable(), PollOpt::edge())
             .unwrap();
         Echo::Server(sock)
@@ -110,12 +110,11 @@ impl Machine for Echo {
 }
 
 fn main() {
-    let mut event_loop = EventLoop::new().unwrap();
-    let mut handler = rotor::Handler::new(Context, &mut event_loop);
+    let mut loop_creator = Loop::new(&Config::new()).unwrap();
     let lst = TcpListener::bind(&"127.0.0.1:3000".parse().unwrap()).unwrap();
-    let ok = handler.add_machine_with(&mut event_loop, |scope| {
+    let ok = loop_creator.add_machine_with(|scope| {
         Ok(Echo::new(lst, scope))
     }).is_ok();
     assert!(ok);
-    event_loop.run(&mut handler).unwrap();
+    loop_creator.run(Context).unwrap();
 }

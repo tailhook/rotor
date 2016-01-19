@@ -35,6 +35,35 @@ pub struct Scope<'a, C:Sized+'a>{
     loop_api: &'a mut LoopApi,
 }
 
+/// This is a structure that works similarly to Scope, but doesn't
+/// have a context
+///
+/// The primary (and probably the only) use case for the `EarlyScope` is to
+/// allow to create a state machine before context has been intialized. This
+/// is useful if you want to put a `Notifier` of the FSM to a context itself.
+pub struct EarlyScope<'a> {
+    token: Token,
+    channel: &'a mut Sender<Notify>,
+    loop_api: &'a mut LoopApi,
+}
+
+/// A common part of `Scope` and `EarlyScope`
+///
+/// For most cases `Scope` scope should be used directly. The trait is here
+/// so you can create a constructor for state machine that is generic over
+/// type of scope used.
+pub trait GenericScope {
+    fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
+        -> io::Result<()>;
+    fn reregister(&mut self, io: &Evented,
+        interest: EventSet, opt: PollOpt)
+        -> io::Result<()>;
+    fn deregister(&mut self, io: &Evented) -> io::Result<()>;
+    fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>;
+    fn clear_timeout(&mut self, token: Timeout) -> bool;
+    fn notifier(&mut self) -> Notifier;
+}
+
 impl<'a, C:Sized+'a> Scope<'a, C> {
 
     pub fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
@@ -76,6 +105,42 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     }
 }
 
+impl<'a, C:Sized+'a> GenericScope for Scope<'a, C> {
+
+    fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.register(io, interest, opt)
+    }
+
+    fn reregister(&mut self, io: &Evented,
+        interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.reregister(io, interest, opt)
+    }
+
+    fn deregister(&mut self, io: &Evented) -> io::Result<()>
+    {
+        self.deregister(io)
+    }
+
+    fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
+    {
+        self.timeout_ms(delay)
+    }
+
+    fn clear_timeout(&mut self, token: Timeout) -> bool
+    {
+        self.clear_timeout(token)
+    }
+
+    /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
+    fn notifier(&mut self) -> Notifier {
+        self.notifier()
+    }
+}
+
 impl<'a, C> Deref for Scope<'a, C> {
     type Target = C;
     fn deref(&self) -> &C {
@@ -89,6 +154,78 @@ impl<'a, C> DerefMut for Scope<'a, C> {
     }
 }
 
+impl<'a> EarlyScope<'a> {
+
+    pub fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.loop_api.register(io, self.token, interest, opt)
+    }
+
+    pub fn reregister(&mut self, io: &Evented,
+        interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.loop_api.reregister(io, self.token, interest, opt)
+    }
+
+    pub fn deregister(&mut self, io: &Evented) -> io::Result<()>
+    {
+        self.loop_api.deregister(io)
+    }
+
+    pub fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
+    {
+        self.loop_api.timeout_ms(self.token, delay)
+    }
+
+    pub fn clear_timeout(&mut self, token: Timeout) -> bool
+    {
+        self.loop_api.clear_timeout(token)
+    }
+
+    /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
+    pub fn notifier(&mut self) -> Notifier {
+        create_notifier(self.token, self.channel)
+    }
+}
+
+impl<'a> GenericScope for EarlyScope<'a> {
+
+    fn register(&mut self, io: &Evented, interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.register(io, interest, opt)
+    }
+
+    fn reregister(&mut self, io: &Evented,
+        interest: EventSet, opt: PollOpt)
+        -> io::Result<()>
+    {
+        self.reregister(io, interest, opt)
+    }
+
+    fn deregister(&mut self, io: &Evented) -> io::Result<()>
+    {
+        self.deregister(io)
+    }
+
+    fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
+    {
+        self.timeout_ms(delay)
+    }
+
+    fn clear_timeout(&mut self, token: Timeout) -> bool
+    {
+        self.clear_timeout(token)
+    }
+
+    /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
+    fn notifier(&mut self) -> Notifier {
+        self.notifier()
+    }
+}
+
 pub fn scope<'x, C, L:LoopApi>(token: Token, ctx: &'x mut C,
     channel: &'x mut Sender<Notify>, loop_api: &'x mut L)
     -> Scope<'x, C>
@@ -96,6 +233,17 @@ pub fn scope<'x, C, L:LoopApi>(token: Token, ctx: &'x mut C,
     Scope {
         token: token,
         ctx: ctx,
+        channel: channel,
+        loop_api: loop_api,
+    }
+}
+
+pub fn early_scope<'x, L:LoopApi>(token: Token,
+    channel: &'x mut Sender<Notify>, loop_api: &'x mut L)
+    -> EarlyScope<'x>
+{
+    EarlyScope {
+        token: token,
         channel: channel,
         loop_api: loop_api,
     }
