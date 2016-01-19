@@ -6,7 +6,7 @@ use mio::util::Slab;
 
 use config::{create_slab, create_loop};
 use handler::{create_handler, NoSlabSpace};
-use scope::{early_scope, EarlyScope};
+use scope::{early_scope, EarlyScope, Scope};
 use {Machine, Config, Handler};
 
 
@@ -18,9 +18,45 @@ use {Machine, Config, Handler};
 /// The second purpose is to create the loop and state machines
 /// before Context is initialized. This is useful when you want to put
 /// `Notifier` objects of state machines into the context.
+///
+/// You can create a loop either right away:
+///
+/// ```ignore
+/// use rotor::{Loop, Config};
+///
+/// let mut lc = Loop::new(&Config::new()).unwrap();
+/// loop_creator.add_machine_with(|scope| {
+///     // The scope here is the `EarlyScope` (no context)
+///     Ok(CreateMachine(x))
+/// }).unwrap();
+/// assert!(conn.is_ok());
+/// lc.run(context).unwrap()
+/// ```
+///
+/// Or if you can create it in two stages:
+///
+/// ```ignore
+/// let lc = Loop::new(&Config::new()).unwrap();
+/// loop_creator.add_machine_with(|scope| {
+///     // The scope here is the `EarlyScope`
+///     Ok(StateMachine1(scope))
+/// }).unwrap();
+/// let mut inst = lc.instantiate(context);
+/// loop_creator.add_machine_with(|scope| {
+///     // The scope here is the real `Scope<C>`
+///     Ok(StateMachine2(scope))
+/// }).unwrap();
+/// inst.run().unwrap()
+/// ```
+///
+///
 pub struct LoopCreator<C, M: Machine<Context=C>> {
     slab: Slab<M>,
     mio: EventLoop<Handler<C, M>>,
+}
+pub struct LoopInstance<C, M: Machine<Context=C>> {
+    mio: EventLoop<Handler<C, M>>,
+    handler: Handler<C, M>,
 }
 
 impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
@@ -55,10 +91,30 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
         }
     }
 
+    pub fn instantiate(self, context: C) -> LoopInstance<C, M> {
+        let LoopCreator { slab, mio } = self;
+        let handler = create_handler(slab, context, mio.channel());
+        LoopInstance { mio: mio, handler: handler }
+    }
+
     pub fn run(self, context: C) -> Result<(), io::Error> {
-        let LoopCreator { slab, mut mio } = self;
-        let mut handler = create_handler(slab, context, mio.channel());
-        mio.run(&mut handler)
+        self.instantiate(context).run()
     }
 }
 
+impl<C, M: Machine<Context=C>> LoopInstance<C, M> {
+
+    pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), Box<Error>>
+        where F: FnOnce(&mut Scope<C>) -> Result<M, Box<Error>>
+    {
+        let ref mut handler = self.handler;
+        let ref mut mio = self.mio;
+        handler.add_machine_with(mio, fun)
+    }
+
+    pub fn run(mut self) -> Result<(), io::Error> {
+        let ref mut handler = self.handler;
+        let ref mut mio = self.mio;
+        mio.run(handler)
+    }
+}

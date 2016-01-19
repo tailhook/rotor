@@ -205,12 +205,11 @@ fn main() {
     // This isn't a good idea for the real work
     fcntl(0, FcntlArg::F_SETFL(O_NONBLOCK)).expect("fcntl");
 
-    let conn = loop_creator.add_machine_with(|scope| {
+    loop_creator.add_machine_with(|scope| {
         Ok(Composed::Tcp(Tcp::new(conn, scope)))
-    });
-    let stdio = loop_creator.add_machine_with(|scope| {
+    }).unwrap();
+    loop_creator.add_machine_with(|scope| {
         Ok(Composed::Stdin(Stdin::new(conn2, scope)))
-    });
-    assert!(conn.is_ok() && stdio.is_ok());
+    }).unwrap();
     loop_creator.run(Context).unwrap();
 }

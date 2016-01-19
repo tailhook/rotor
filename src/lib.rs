@@ -23,7 +23,7 @@ pub use machine::Machine;
 pub use scope::{Scope, EarlyScope, GenericScope};
 pub use notify::Notifier;
 pub use config::Config;
-pub use creator::{LoopCreator as Loop};
+pub use creator::{LoopCreator as Loop, LoopInstance};
 
 pub use compose::{Compose2};
 

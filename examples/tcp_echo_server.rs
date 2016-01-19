@@ -112,9 +112,8 @@ impl Machine for Echo {
 fn main() {
     let mut loop_creator = Loop::new(&Config::new()).unwrap();
     let lst = TcpListener::bind(&"127.0.0.1:3000".parse().unwrap()).unwrap();
-    let ok = loop_creator.add_machine_with(|scope| {
+    loop_creator.add_machine_with(|scope| {
         Ok(Echo::new(lst, scope))
-    }).is_ok();
-    assert!(ok);
+    }).unwrap();
     loop_creator.run(Context).unwrap();
 }
