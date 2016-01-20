@@ -22,7 +22,7 @@ state machine
 child state machine
     Often one state machine calls an action from another state machine. The
     one that calls actions is a **parent**. The one that receives actions
-    is called **child**. The parent state machine usually also owns the parent
+    is called **child**. The parent state machine usually also owns the child
     state machine (means that when parent is shut down, the all the children
     too).
 
