@@ -63,6 +63,12 @@ pub trait Machine: Sized {
         -> Response<Self, Self::Seed>;
 
     /// Message received
+    ///
+    /// Note the spurious wakeups are possible, because messages are
+    /// asynchronous, and state machine is identified by token.
+    /// Tokens are reused quickly.
+    ///
+    /// So never make this `unreachable!()` or `unimplemented!()`
     fn wakeup(self, scope: &mut Scope<Self::Context>)
         -> Response<Self, Self::Seed>;
 }
