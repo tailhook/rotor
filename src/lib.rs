@@ -17,13 +17,15 @@ mod machine;
 mod notify;
 mod config;
 mod creator;
+mod error;
 
-pub use handler::{Handler, NoSlabSpace};
+pub use handler::{Handler};
 pub use machine::Machine;
 pub use scope::{Scope, EarlyScope, GenericScope};
 pub use notify::Notifier;
 pub use config::Config;
 pub use creator::{LoopCreator as Loop, LoopInstance};
+pub use error::SpawnError;
 
 pub use compose::{Compose2};
 

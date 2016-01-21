@@ -1,7 +1,6 @@
-use std::any::Any;
 use std::error::Error;
 
-use {Response, Scope, EventSet};
+use {Response, Scope, EventSet, SpawnError};
 
 
 /// A trait that every state machine in the loop must implement
@@ -18,7 +17,7 @@ pub trait Machine: Sized {
     /// Note: this is only used to create machines returned by this machine.
     /// So unless this machine processses accepting socket this should
     /// probably be Void.
-    type Seed: Any+Sized;
+    type Seed: Sized;
 
     /// Create a machine from some data
     ///
@@ -52,7 +51,8 @@ pub trait Machine: Sized {
     /// again.
     ///
     /// Note: it's useless to spawn from here, so we expect Option<Self> here.
-    fn spawn_error(self, _scope: &mut Scope<Self::Context>, error: Box<Error>)
+    fn spawn_error(self, _scope: &mut Scope<Self::Context>,
+                   error: SpawnError<Self::Seed>)
         -> Option<Self>
     {
         panic!("Error spawning state machine: {}", error);

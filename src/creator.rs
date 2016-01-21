@@ -5,9 +5,10 @@ use mio::EventLoop;
 use mio::util::Slab;
 
 use config::{create_slab, create_loop};
-use handler::{create_handler, NoSlabSpace};
+use handler::{create_handler};
 use scope::{early_scope, EarlyScope, Scope};
-use {Machine, Config, Handler};
+use {Machine, Config, Handler, SpawnError};
+use SpawnError::NoSlabSpace;
 
 
 /// An object that is used to construct a loop
@@ -69,7 +70,7 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
         })
     }
 
-    pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), Box<Error>>
+    pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), SpawnError<()>>
         where F: FnOnce(&mut EarlyScope) -> Result<M, Box<Error>>
     {
         let ref mut chan = self.mio.channel();
@@ -87,7 +88,7 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
         if res.is_some() {
             Ok(())
         } else {
-            Err(Box::new(NoSlabSpace(())))
+            Err(NoSlabSpace(()))
         }
     }
 
@@ -104,7 +105,7 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
 
 impl<C, M: Machine<Context=C>> LoopInstance<C, M> {
 
-    pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), Box<Error>>
+    pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), SpawnError<()>>
         where F: FnOnce(&mut Scope<C>) -> Result<M, Box<Error>>
     {
         let ref mut handler = self.handler;

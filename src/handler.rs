@@ -1,12 +1,11 @@
-use std::fmt;
-use std::any::Any;
 use std::error::Error;
 
 use mio::{self, EventLoop, Token, EventSet, Sender};
 use mio::util::Slab;
 
 use scope::scope;
-use {Scope, Response, Machine};
+use {SpawnError, Scope, Response, Machine};
+use SpawnError::{NoSlabSpace, UserError};
 
 
 pub enum Timeo {
@@ -43,10 +42,6 @@ pub struct Handler<Ctx, M>
     channel: Sender<Notify>,
 }
 
-/// Slab reached it's capacity limit
-///
-/// This error is passed to the `spawn_error` handler
-pub struct NoSlabSpace<S:Any+Sized>(pub S);
 
 impl<C, M> Handler<C, M>
     where M: Machine<Context=C>,
@@ -89,7 +84,7 @@ impl<C, M> Handler<C, M>
     where M: Machine<Context=C>
 {
     pub fn add_machine_with<F>(&mut self,
-        eloop: &mut EventLoop<Self>, fun: F) -> Result<(), Box<Error>>
+        eloop: &mut EventLoop<Self>, fun: F) -> Result<(), SpawnError<()>>
         where F: FnOnce(&mut Scope<C>) -> Result<M, Box<Error>>
     {
         let ref mut ctx = self.context;
@@ -107,7 +102,7 @@ impl<C, M> Handler<C, M>
         if res.is_some() {
             Ok(())
         } else {
-            Err(Box::new(NoSlabSpace(())))
+            Err(NoSlabSpace(()))
         }
     }
 
@@ -133,10 +128,14 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
         let res = handler.add_machine_with(eloop, |scope| {
             M::create(new.take().unwrap(), scope)
         });
-        if let Err(mut err) = res {
-            if let Some(new) = new.take() {
-                err = Box::new(NoSlabSpace(new));
-            }
+        if let Err(err) = res {
+            let err = if let Some(new) = new.take() {
+                NoSlabSpace(new)
+            } else if let UserError(e) = err {
+                UserError(e)
+            } else {
+                unreachable!();
+            };
             let ref mut scope = scope(token, &mut handler.context,
                 &mut handler.channel, eloop);
             handler.slab.replace_with(token, |m| {
@@ -184,23 +183,3 @@ impl<Ctx, M> mio::Handler for Handler<Ctx, M>
         }
     }
 }
-
-impl<S:Any+Sized> fmt::Debug for NoSlabSpace<S> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "NoSlabSpace(<hidden seed>)")
-    }
-}
-impl<S:Any+Sized> fmt::Display for NoSlabSpace<S> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "no slab space available")
-    }
-}
-impl<S:Any+Sized> Error for NoSlabSpace<S> {
-    fn description(&self) -> &'static str {
-        "no slab space available"
-    }
-    fn cause(&self) -> Option<&Error> {
-        None
-    }
-}
-

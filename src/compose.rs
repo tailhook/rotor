@@ -1,9 +1,8 @@
 use std::error::Error;
-use std::mem::{forget, zeroed, swap};
 
 use mio::EventSet;
 
-use {Machine, Scope, Response, NoSlabSpace};
+use {Machine, Scope, Response};
 
 
 /// Composes two state machines
@@ -30,32 +29,13 @@ impl<X, A, B> Machine for Compose2<A, B>
     type Seed = Compose2Seed<A::Seed, B::Seed>;
 
     fn create(seed: Self::Seed, scope: &mut Scope<X>)
-        -> Result<Self, Box<Error>> {
+        -> Result<Self, Box<Error>>
+    {
         use Compose2::*;
         use self::Compose2Seed::*;
         match seed {
-            As(s) => A::create(s, scope).map(A).map_err(|mut e| {
-                if e.is::<NoSlabSpace<A::Seed>>() {
-                    let mut s: NoSlabSpace<A::Seed> = unsafe { zeroed() };
-                    swap(&mut s,
-                        e.downcast_mut::<NoSlabSpace<A::Seed>>().unwrap());
-                    forget(e);
-                    Box::new(NoSlabSpace(As::<_, B::Seed>(s.0))) as Box<Error>
-                } else {
-                    e
-                }
-            }),
-            Bs(s) => B::create(s, scope).map(B).map_err(|mut e| {
-                if e.is::<NoSlabSpace<B::Seed>>() {
-                    let mut s: NoSlabSpace<B::Seed> = unsafe { zeroed() };
-                    swap(&mut s,
-                        e.downcast_mut::<NoSlabSpace<B::Seed>>().unwrap());
-                    forget(e);
-                    Box::new(NoSlabSpace(Bs::<A::Seed, _>(s.0))) as Box<Error>
-                } else {
-                    e
-                }
-            }),
+            As(s) => A::create(s, scope).map(A),
+            Bs(s) => B::create(s, scope).map(B),
         }
     }
     fn ready(self, events: EventSet, scope: &mut Scope<X>)

@@ -39,22 +39,7 @@ macro_rules! rotor_compose {
             {
                 match seed {
                     $( $cname::$iname (x)
-                        => $crate::Machine::create(x, scope).map($name::$iname).map_err(|mut e| {
-                            if e.is::<$crate::NoSlabSpace<
-                                <$itype as $crate::Machine>::Seed>>() {
-                                let mut s: $crate::NoSlabSpace<
-                                    <$itype as $crate::Machine>::Seed> =
-                                    unsafe { ::std::mem::zeroed() };
-                                ::std::mem::swap(&mut s,
-                                    e.downcast_mut::<$crate::NoSlabSpace<
-                                        <$itype as $crate::Machine>::Seed>>().unwrap());
-                                ::std::mem::forget(e);
-                                Box::new($crate::NoSlabSpace(
-                                    $cname::$iname(s.0))) as Box<::std::error::Error>
-                            } else {
-                                e
-                            }
-                        }),
+                        => $crate::Machine::create(x, scope).map($name::$iname),
                     )*
                 }
             }
