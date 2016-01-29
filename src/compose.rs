@@ -22,11 +22,11 @@ pub enum Compose2Seed<A:Sized, B:Sized> {
     Bs(B),
 }
 
-impl<X, A, B> Machine for Compose2<A, B>
-    where A: Machine<Context=X>, B:Machine<Context=X>
+impl<X, AA, BB> Machine for Compose2<AA, BB>
+    where AA: Machine<Context=X>, BB:Machine<Context=X>
 {
     type Context = X;
-    type Seed = Compose2Seed<A::Seed, B::Seed>;
+    type Seed = Compose2Seed<AA::Seed, BB::Seed>;
 
     fn create(seed: Self::Seed, scope: &mut Scope<X>)
         -> Result<Self, Box<Error>>
@@ -34,8 +34,8 @@ impl<X, A, B> Machine for Compose2<A, B>
         use Compose2::*;
         use self::Compose2Seed::*;
         match seed {
-            As(s) => A::create(s, scope).map(A),
-            Bs(s) => B::create(s, scope).map(B),
+            As(s) => AA::create(s, scope).map(A),
+            Bs(s) => BB::create(s, scope).map(B),
         }
     }
     fn ready(self, events: EventSet, scope: &mut Scope<X>)
