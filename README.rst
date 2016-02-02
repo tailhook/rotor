@@ -4,6 +4,7 @@ Rotor
 
 :Status: Alpha
 :Examples: `TCP echo server`_, `TCP client (telnet)`_
+:Documentation: http://tailhook.github.com/rotor/
 
 .. _TCP echo server: https://github.com/tailhook/rotor/blob/master/examples/tcp_echo_server.rs
 .. _TCP client (telnet): https://github.com/tailhook/rotor/blob/master/examples/telnet.rs

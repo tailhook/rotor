@@ -7,6 +7,7 @@ license = "MIT"
 readme = "README.rst"
 keywords = ["io", "loop", "state", "machine", "mio"]
 homepage = "http://github.com/tailhook/rotor"
+documentation = "http://tailhook.github.com/rotor/"
 version = "0.5.0"
 authors = ["paul@colomiets.name"]
 
