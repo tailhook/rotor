@@ -10,6 +10,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   ecosystem
    glossary
 
 .. _`Api Docs`: http://tailhook.github.com/rotor/

@@ -1,0 +1,28 @@
+=========
+Ecosystem
+=========
+
+
+Libraries
+=========
+
+* `rotor-tools <https://crates.io/crates/rotor-tools/>`_ -- a collection of
+  small convenience utilities
+* `rotor-stream <https://crates.io/crates/rotor-stream/>`_ -- an abstraction for
+  writing protocols which use TCP or Unix stream sockets
+* `rotor-carbon <https://crates.io/crates/rotor-carbon/>`_ -- implementation of
+  the `carbon <http://graphite.wikidot.com/>`_ protocol (more known as graphite)
+* `rotor-dns <https://crates.io/crates/rotor-dns/>`_ -- DNS support for rotor
+* `rotor-http <https://crates.io/crates/rotor-http/>`_ -- HTTP server and client
+  implementation
+* `hyper (mio-rotor branch) <https://github.com/hyperium/hyper/tree/mio-rotor>`_
+  the implementation fo HTTP protocol added to hyper itself
+
+
+Applications
+============
+
+* `Kinglet <https://github.com/pyfisch/kinglet>`_ -- a HTTP server
+* `basic-http-server <https://github.com/brson/basic-http-server>`_ -- also a
+  HTTP server
+
