@@ -11,7 +11,6 @@ Contents:
    :maxdepth: 2
 
    glossary
-   faq
 
 .. _`Api Docs`: http://tailhook.github.com/rotor/
 

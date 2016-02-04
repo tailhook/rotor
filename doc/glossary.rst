@@ -9,7 +9,7 @@ state machine
     `introductory article about why state machines are designed that
     way`__.
 
-    State machine implements at least abstract ``rotor::base::Machine`` trait.
+    State machine implements at least abstract ``rotor::Machine`` trait.
     But there are also more state machine traits that are more concrete.
 
     Rules: TBD
