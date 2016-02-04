@@ -29,7 +29,7 @@ macro_rules! rotor_compose {
         $($iname:ident ($itype:ty),)*)
     => {
         enum $cname {
-            $( $iname (<$itype as Machine>::Seed), )*
+            $( $iname (<$itype as $crate::Machine>::Seed), )*
         }
         impl $( <$ctx_name:$ctx_bound> )* $crate::Machine for $name {
             type Context = $ctx_typ;
@@ -43,7 +43,7 @@ macro_rules! rotor_compose {
                     )*
                 }
             }
-            fn ready(self, events: EventSet,
+            fn ready(self, events: $crate::EventSet,
                 scope: &mut $crate::Scope<$ctx_typ>)
                 -> $crate::Response<Self, Self::Seed>
             {
