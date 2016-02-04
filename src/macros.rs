@@ -1,3 +1,24 @@
+/// Compose multiple state machines into single type
+///
+/// Composition requires two types: the state machine itself and Seed which
+/// is used to create children state machines.
+///
+/// Mostly because of limitations of Rust macro system composition only works
+/// on concrete context type.
+///
+/// # Example
+/// ```ignore
+/// rotor_compose!{
+///     pub enum Fsm/Seed<Context> {
+///         Http(HttpMachine)
+///         Dns(DnsMachine)
+///     }
+/// }
+/// ```
+///
+/// This creates a an `Fsm` state machine type which is enum with two options.
+/// And `Seed` state machine type, which is also enum with same option names
+/// but uses `<HttpMachine as rotor::Machine>::Seed` for the wrapped type.
 #[macro_export]
 macro_rules! rotor_compose {
     /* TODO(tailhook) make and check generic combinators
