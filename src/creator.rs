@@ -50,11 +50,18 @@ use SpawnError::NoSlabSpace;
 /// inst.run().unwrap()
 /// ```
 ///
+/// The [the guide] for more information.
 ///
+/// [the guide]: http://rotor.readthedocs.org/en/latest/loop_init.html
 pub struct LoopCreator<C, M: Machine<Context=C>> {
     slab: Slab<M>,
     mio: EventLoop<Handler<C, M>>,
 }
+/// Second stage of loop creation
+///
+/// See the docs of `LoopCreator` or [the guide] for more information.
+///
+/// [the guide]: http://rotor.readthedocs.org/en/latest/loop_init.html
 pub struct LoopInstance<C, M: Machine<Context=C>> {
     mio: EventLoop<Handler<C, M>>,
     handler: Handler<C, M>,
