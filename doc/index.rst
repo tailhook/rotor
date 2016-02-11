@@ -11,6 +11,7 @@ Contents:
    :maxdepth: 2
 
    loop_init
+   state_machine
    ecosystem
    glossary
 
