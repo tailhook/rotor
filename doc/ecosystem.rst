@@ -28,3 +28,12 @@ Applications
 * `basic-http-server <https://github.com/brson/basic-http-server>`_ -- also a
   HTTP server
 
+
+Other
+=====
+
+* `stator <https://github.com/tailhook/stator>`_ -- a wrapper around foreign
+  function interface (FFI) for various rotor libraries that allows
+  dispatching them from scripting languages; thus offloading asynchronous
+  and protocol parsing work to rotor that is put in separate thread; so
+  rust code is running in parallel to the scripting language interpreter.
