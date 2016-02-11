@@ -26,25 +26,25 @@ in methods one by one::
     impl<C> Machine for Fsm<C> {
         type Context = C;
         type Seed = Void;
-        fn create(seed: Self::Seed, scope: &mut Scope<C>)
+        fn create(seed: Self::Seed, _scope: &mut Scope<C>)
             -> Result<Self, Box<Error>>
         {
             unreachable(seed)
         }
-        fn ready(self, events: EventSet, scope: &mut Scope<C>)
+        fn ready(self, _events: EventSet, _scope: &mut Scope<C>)
             -> Response<Self, Self::Seed>
         {
             unimplemented!();
         }
-        fn spawned(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>
+        fn spawned(self, _scope: &mut Scope<C>) -> Response<Self, Self::Seed>
         {
             unimplemented!();
         }
-        fn timeout(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>
+        fn timeout(self, _scope: &mut Scope<C>) -> Response<Self, Self::Seed>
         {
             unimplemented!();
         }
-        fn wakeup(self, scope: &mut Scope<C>) -> Response<Self, Self::Seed>
+        fn wakeup(self, _scope: &mut Scope<C>) -> Response<Self, Self::Seed>
         {
             unimplemented!();
         }
