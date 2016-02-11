@@ -4,10 +4,12 @@ Rotor
 
 :Status: Alpha
 :Examples: `TCP echo server`_, `TCP client (telnet)`_
+:Ecosystem: `libraries and apps using rotor`_
 :Documentation: http://tailhook.github.com/rotor/
 
 .. _TCP echo server: https://github.com/tailhook/rotor/blob/master/examples/tcp_echo_server.rs
 .. _TCP client (telnet): https://github.com/tailhook/rotor/blob/master/examples/telnet.rs
+.. _libraries and apps using rotor: http://rotor.readthedocs.org/en/latest/ecosystem.html
 
 The mio-based framework for rust for doing I/O in simple and composable way.
 
