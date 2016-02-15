@@ -14,6 +14,7 @@ authors = ["paul@colomiets.name"]
 [dependencies]
 mio = "0.5"
 quick-error = "0.2.1"
+void = "0.0.5"
 
 [dev-dependencies]
 argparse = "0.2.1"

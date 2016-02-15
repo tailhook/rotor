@@ -4,6 +4,7 @@
 //!
 #![crate_name="rotor"]
 
+extern crate void;
 extern crate mio as mio_original;
 #[macro_use] extern crate quick_error;
 

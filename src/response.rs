@@ -1,3 +1,5 @@
+use void::Void;
+
 use {Response};
 
 
@@ -20,3 +22,8 @@ impl<M: Sized, N:Sized> Response<M, N> {
     }
 }
 
+impl<M> Into<Option<M>> for Response<M, Void> {
+    fn into(self) -> Option<M> {
+        self.0
+    }
+}
