@@ -19,8 +19,7 @@ pub trait LoopApi {
     fn shutdown(&mut self);
 }
 
-impl<'a, C, M> LoopApi for EventLoop<Handler<C, M>>
-    where M: Machine<Context=C>
+impl<'a, M: Machine> LoopApi for EventLoop<Handler<M>>
 {
     fn register(&mut self, io: &Evented, token: Token,
         interest: EventSet, opt: PollOpt) -> io::Result<()>

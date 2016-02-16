@@ -37,19 +37,17 @@ pub enum Notify {
 /// assert!(conn.is_ok());
 /// event_loop.run(&mut handler).unwrap();
 /// ```
-pub struct Handler<Ctx, M>
-    where M: Machine<Context=Ctx>
+pub struct Handler<M: Machine>
 {
     slab: Slab<(Option<(Timeout, Time)>, M)>,
-    context: Ctx,
+    context: M::Context,
     channel: Sender<Notify>,
     start_time: SteadyTime,
 }
 
-pub fn create_handler<C, M>(slab: Slab<(Option<(Timeout, Time)>, M)>,
-    context: C, channel: Sender<Notify>)
-    -> Handler<C, M>
-    where M: Machine<Context=C>
+pub fn create_handler<M: Machine>(slab: Slab<(Option<(Timeout, Time)>, M)>,
+    context: M::Context, channel: Sender<Notify>)
+    -> Handler<M>
 {
     Handler {
         slab: slab,
@@ -88,10 +86,10 @@ fn replacer<C, M, N>(token: Token,
     mach.map(|m| (rtime, m)).ok() // the error is already logged in decompose()
 }
 
-fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
-    eloop: &mut EventLoop<Handler<C, M>>, token: Token, fun: F)
-    where M: Machine<Context=C>,
-          F: FnOnce(M, &mut Scope<C>) -> Response<M, M::Seed>
+fn machine_loop<M, F>(handler: &mut Handler<M>,
+    eloop: &mut EventLoop<Handler<M>>, token: Token, fun: F)
+    where M: Machine,
+          F: FnOnce(M, &mut Scope<M::Context>) -> Response<M, M::Seed>
 {
     let time = handler.loop_time();
     let ref mut context = handler.context;
@@ -141,8 +139,7 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     }
 }
 
-impl<Ctx, M> Handler<Ctx, M>
-    where M: Machine<Context=Ctx>
+impl<M: Machine> Handler<M>
 {
     pub fn loop_time(&self) -> Time {
         let now = SteadyTime::now();
@@ -150,7 +147,7 @@ impl<Ctx, M> Handler<Ctx, M>
     }
     pub fn add_machine_with<F>(&mut self, eloop: &mut EventLoop<Self>, fun: F)
         -> Result<(), SpawnError<()>>
-        where F: FnOnce(&mut Scope<Ctx>) -> Response<M, Void>
+        where F: FnOnce(&mut Scope<M::Context>) -> Response<M, Void>
     {
         let time = self.loop_time();
         let ref mut context = self.context;
@@ -174,8 +171,7 @@ impl<Ctx, M> Handler<Ctx, M>
     }
 }
 
-impl<Ctx, M> mio::Handler for Handler<Ctx, M>
-    where M: Machine<Context=Ctx>
+impl<M: Machine> mio::Handler for Handler<M>
 {
     type Message = Notify;
     type Timeout = Timeo;

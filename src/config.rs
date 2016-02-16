@@ -56,9 +56,8 @@ pub fn create_slab<M:Sized>(cfg: &Config) -> Slab<M> {
     Slab::new(cfg.slab_capacity)
 }
 
-pub fn create_loop<C, M>(cfg: &Config)
-    -> Result<EventLoop<Handler<C, M>>, io::Error>
-    where M: Machine<Context=C>
+pub fn create_loop<M: Machine>(cfg: &Config)
+    -> Result<EventLoop<Handler<M>>, io::Error>
 {
     EventLoop::configured(cfg.mio.clone())
 }

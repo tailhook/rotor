@@ -55,22 +55,22 @@ use response::decompose;
 /// The [the guide] for more information.
 ///
 /// [the guide]: http://rotor.readthedocs.org/en/latest/loop_init.html
-pub struct LoopCreator<C, M: Machine<Context=C>> {
+pub struct LoopCreator<M: Machine> {
     slab: Slab<(Option<(Timeout, Time)>, M)>,
-    mio: EventLoop<Handler<C, M>>,
+    mio: EventLoop<Handler<M>>,
 }
 /// Second stage of loop creation
 ///
 /// See the docs of `LoopCreator` or [the guide] for more information.
 ///
 /// [the guide]: http://rotor.readthedocs.org/en/latest/loop_init.html
-pub struct LoopInstance<C, M: Machine<Context=C>> {
-    mio: EventLoop<Handler<C, M>>,
-    handler: Handler<C, M>,
+pub struct LoopInstance<M: Machine> {
+    mio: EventLoop<Handler<M>>,
+    handler: Handler<M>,
 }
 
-impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
-    pub fn new(cfg: &Config) -> Result<LoopCreator<C, M>, io::Error> {
+impl<M: Machine> LoopCreator<M> {
+    pub fn new(cfg: &Config) -> Result<LoopCreator<M>, io::Error> {
         let slab = create_slab(&cfg);
         let eloop = try!(create_loop(&cfg));
         Ok(LoopCreator {
@@ -102,21 +102,21 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
         }
     }
 
-    pub fn instantiate(self, context: C) -> LoopInstance<C, M> {
+    pub fn instantiate(self, context: M::Context) -> LoopInstance<M> {
         let LoopCreator { slab, mio } = self;
         let handler = create_handler(slab, context, mio.channel());
         LoopInstance { mio: mio, handler: handler }
     }
 
-    pub fn run(self, context: C) -> Result<(), io::Error> {
+    pub fn run(self, context: M::Context) -> Result<(), io::Error> {
         self.instantiate(context).run()
     }
 }
 
-impl<C, M: Machine<Context=C>> LoopInstance<C, M> {
+impl<M: Machine> LoopInstance<M> {
 
     pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), SpawnError<()>>
-        where F: FnOnce(&mut Scope<C>) -> Response<M, Void>
+        where F: FnOnce(&mut Scope<M::Context>) -> Response<M, Void>
     {
         self.handler.add_machine_with(&mut self.mio, fun)
     }
