@@ -1,4 +1,5 @@
 use std::error::Error;
+use time::SteadyTime;
 
 use mio::{self, EventLoop, Token, EventSet, Sender};
 use mio::util::Slab;
@@ -6,6 +7,7 @@ use mio::util::Slab;
 use scope::scope;
 use {SpawnError, Scope, Response, Machine};
 use SpawnError::{NoSlabSpace, UserError};
+use loop_time::make_time;
 
 
 pub enum Timeo {
@@ -40,6 +42,7 @@ pub struct Handler<Ctx, M>
     slab: Slab<M>,
     context: Ctx,
     channel: Sender<Notify>,
+    start_time: SteadyTime,
 }
 
 pub fn create_handler<C, M>(slab: Slab<M>, context: C, channel: Sender<Notify>)
@@ -50,6 +53,7 @@ pub fn create_handler<C, M>(slab: Slab<M>, context: C, channel: Sender<Notify>)
         slab: slab,
         context: context,
         channel: channel,
+        start_time: SteadyTime::now(),
     }
 }
 
@@ -60,10 +64,11 @@ impl<C, M> Handler<C, M>
         eloop: &mut EventLoop<Self>, fun: F) -> Result<(), SpawnError<()>>
         where F: FnOnce(&mut Scope<C>) -> Result<M, Box<Error>>
     {
+        let time = make_time(self.start_time, SteadyTime::now());
         let ref mut ctx = self.context;
         let ref mut chan = self.channel;
         let res = self.slab.insert_with(|token| {
-            let ref mut scope = scope(token, ctx, chan, eloop);
+            let ref mut scope = scope(time, token, ctx, chan, eloop);
             match fun(scope) {
                 Ok(x) => x,
                 Err(_) => {
@@ -86,9 +91,11 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
     where M: Machine<Context=C>,
           F: FnOnce(M, &mut Scope<C>) -> Response<M, M::Seed>
 {
+    let now = SteadyTime::now();
+    let time = make_time(handler.start_time, now);
     let mut creator = None;
     {
-        let ref mut scope = scope(token, &mut handler.context,
+        let ref mut scope = scope(time, token, &mut handler.context,
             &mut handler.channel, eloop);
         handler.slab.replace_with(token, |m| {
             let res = fun(m, scope);
@@ -109,14 +116,14 @@ fn machine_loop<C, M, F>(handler: &mut Handler<C, M>,
             } else {
                 unreachable!();
             };
-            let ref mut scope = scope(token, &mut handler.context,
+            let ref mut scope = scope(time, token, &mut handler.context,
                 &mut handler.channel, eloop);
             handler.slab.replace_with(token, |m| {
                 m.spawn_error(scope, err)
             }).ok();
             break;
         } else {
-            let ref mut scope = scope(token, &mut handler.context,
+            let ref mut scope = scope(time, token, &mut handler.context,
                 &mut handler.channel, eloop);
             handler.slab.replace_with(token, |m| {
                 let res = m.spawned(scope);

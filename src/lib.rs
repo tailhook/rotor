@@ -5,6 +5,7 @@
 #![crate_name="rotor"]
 
 extern crate void;
+extern crate time;
 extern crate mio as mio_original;
 #[macro_use] extern crate quick_error;
 
@@ -19,6 +20,7 @@ mod notify;
 mod config;
 mod creator;
 mod error;
+mod loop_time;
 
 pub use handler::{Handler};
 pub use machine::Machine;
@@ -27,6 +29,7 @@ pub use notify::Notifier;
 pub use config::Config;
 pub use creator::{LoopCreator as Loop, LoopInstance};
 pub use error::SpawnError;
+pub use loop_time::Time;
 
 pub use compose::{Compose2};
 

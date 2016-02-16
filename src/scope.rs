@@ -6,7 +6,7 @@ use mio::{Token, Sender};
 use handler::Notify;
 use loop_api::LoopApi;
 use notify::create_notifier;
-use {Notifier};
+use {Notifier, Time};
 use {Evented, EventSet, PollOpt, Timeout, TimerError};
 
 /// The structure passed to every action handler
@@ -33,6 +33,7 @@ pub struct Scope<'a, C:Sized+'a>{
     ctx: &'a mut C,
     channel: &'a mut Sender<Notify>,
     loop_api: &'a mut LoopApi,
+    time: Time,
 }
 
 /// This is a structure that works similarly to Scope, but doesn't
@@ -62,6 +63,10 @@ pub trait GenericScope {
     fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>;
     fn clear_timeout(&mut self, token: Timeout) -> bool;
     fn notifier(&mut self) -> Notifier;
+    /// Time of the current loop iteration
+    ///
+    /// This is a time that needs to be used for timeouts. It's cheap to use
+    fn now(&self) -> Time;
 }
 
 impl<'a, C:Sized+'a> Scope<'a, C> {
@@ -103,6 +108,13 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     pub fn shutdown_loop(&mut self) {
         self.loop_api.shutdown()
     }
+
+    /// Time of the current loop iteration
+    ///
+    /// This is a time that needs to be used for timeouts. It's cheap to use
+    pub fn now(&self) -> Time {
+        self.time
+    }
 }
 
 impl<'a, C:Sized+'a> GenericScope for Scope<'a, C> {
@@ -138,6 +150,13 @@ impl<'a, C:Sized+'a> GenericScope for Scope<'a, C> {
     /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
     fn notifier(&mut self) -> Notifier {
         self.notifier()
+    }
+
+    /// Time of the current loop iteration
+    ///
+    /// This is a time that needs to be used for timeouts. It's cheap to use
+    fn now(&self) -> Time {
+        self.time
     }
 }
 
@@ -188,6 +207,15 @@ impl<'a> EarlyScope<'a> {
     pub fn notifier(&mut self) -> Notifier {
         create_notifier(self.token, self.channel)
     }
+
+    /// Time of the current loop iteration
+    ///
+    /// This is a time that needs to be used for timeouts. It's cheap to use
+    pub fn now(&self) -> Time {
+        // Early scope is only used when creating a context. It's definitely
+        // at the start of the things. But we may review this in future.
+        Time::zero()
+    }
 }
 
 impl<'a> GenericScope for EarlyScope<'a> {
@@ -224,9 +252,17 @@ impl<'a> GenericScope for EarlyScope<'a> {
     fn notifier(&mut self) -> Notifier {
         self.notifier()
     }
+    /// Time of the current loop iteration
+    ///
+    /// This is a time that needs to be used for timeouts. It's cheap to use
+    fn now(&self) -> Time {
+        // Early scope is only used when creating a context. It's definitely
+        // at the start of the things. But we may review this in future.
+        Time::zero()
+    }
 }
 
-pub fn scope<'x, C, L:LoopApi>(token: Token, ctx: &'x mut C,
+pub fn scope<'x, C, L:LoopApi>(time: Time, token: Token, ctx: &'x mut C,
     channel: &'x mut Sender<Notify>, loop_api: &'x mut L)
     -> Scope<'x, C>
 {
@@ -235,6 +271,7 @@ pub fn scope<'x, C, L:LoopApi>(token: Token, ctx: &'x mut C,
         ctx: ctx,
         channel: channel,
         loop_api: loop_api,
+        time: time,
     }
 }
 
