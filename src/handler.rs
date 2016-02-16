@@ -42,33 +42,6 @@ pub struct Handler<Ctx, M>
     channel: Sender<Notify>,
 }
 
-
-impl<C, M> Handler<C, M>
-    where M: Machine<Context=C>,
-{
-    pub fn new_with_capacity(context: C, eloop: &mut EventLoop<Handler<C, M>>,
-        capacity: usize)
-        -> Handler<C, M>
-    {
-        Handler {
-            slab: Slab::new(capacity),
-            context: context,
-            channel: eloop.channel(),
-        }
-    }
-    pub fn new(context: C, eloop: &mut EventLoop<Handler<C, M>>)
-        -> Handler<C, M>
-    {
-        // TODO(tailhook) create default config from the ulimit data instead
-        // of using real defaults
-        Handler {
-            slab: Slab::new(4096),
-            context: context,
-            channel: eloop.channel(),
-        }
-    }
-}
-
 pub fn create_handler<C, M>(slab: Slab<M>, context: C, channel: Sender<Notify>)
     -> Handler<C, M>
     where M: Machine<Context=C>
