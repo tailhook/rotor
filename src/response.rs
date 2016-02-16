@@ -84,6 +84,37 @@ impl<M: Sized, N:Sized> Response<M, N> {
         };
         Response(imp)
     }
+
+    /// Returns true if state machine is stopped
+    ///
+    /// I.e. the method returns true if the `Response` was created either with
+    /// `Response::done` or `Response::error`
+    pub fn is_stopped(&self) -> bool {
+        use self::ResponseImpl::*;
+        match self.0 {
+            Normal(..) => false,
+            Deadline(..) => false,
+            Spawn(..) => false,
+            Done => true,
+            Error(..) => true,
+        }
+    }
+
+    /// Return a reference to an error passed to `Response::error`
+    ///
+    /// Returns None if any other constructor was used.
+    ///
+    /// This is mostly useful for printing the error.
+    pub fn cause(&self) -> Option<&Error> {
+        use self::ResponseImpl::*;
+        match self.0 {
+            Normal(..) => None,
+            Deadline(..) => None,
+            Spawn(..) => None,
+            Done => None,
+            Error(ref e) => Some(&**e),
+        }
+    }
 }
 
 pub fn decompose<M, N>(token: Token, res: Response<M, N>)
