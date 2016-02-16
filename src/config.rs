@@ -4,7 +4,8 @@ use std::default::Default;
 use mio::util::Slab;
 use mio::{EventLoop, EventLoopConfig};
 
-use {Handler, Machine};
+use handler::Handler;
+use {Machine};
 
 
 /// Event loop configuration

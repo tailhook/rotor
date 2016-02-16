@@ -22,7 +22,7 @@ use std::time::Duration;
 /// we truncate (i.e. floor) the duration value. We may change this in future.
 /// Note that for timeouts this works well enough, as mio already bumps the
 /// timeout to at least a millisecond ahead.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Time(u64);
 
 impl Add<Duration> for Time {
@@ -42,4 +42,12 @@ impl Time {
 
 pub fn make_time(base: SteadyTime, now: SteadyTime) -> Time {
     Time((now - base).num_milliseconds() as u64)
+}
+
+pub fn diff_ms(now: Time, event: Time) -> u64 {
+    if event.0 > now.0 {
+        event.0 - now.0
+    } else {
+        0
+    }
 }

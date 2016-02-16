@@ -1,6 +1,5 @@
-use std::error::Error;
-
 use mio::EventSet;
+use void::{Void, unreachable};
 
 use {Machine, Scope, Response};
 
@@ -29,13 +28,13 @@ impl<X, AA, BB> Machine for Compose2<AA, BB>
     type Seed = Compose2Seed<AA::Seed, BB::Seed>;
 
     fn create(seed: Self::Seed, scope: &mut Scope<X>)
-        -> Result<Self, Box<Error>>
+        -> Response<Self, Void>
     {
         use Compose2::*;
         use self::Compose2Seed::*;
         match seed {
-            As(s) => AA::create(s, scope).map(A),
-            Bs(s) => BB::create(s, scope).map(B),
+            As(s) => AA::create(s, scope).map(A, |x| unreachable(x)),
+            Bs(s) => BB::create(s, scope).map(B, |x| unreachable(x)),
         }
     }
     fn ready(self, events: EventSet, scope: &mut Scope<X>)

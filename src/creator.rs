@@ -3,12 +3,14 @@ use std::error::Error;
 
 use mio::EventLoop;
 use mio::util::Slab;
+use void::{Void, unreachable};
 
 use config::{create_slab, create_loop};
-use handler::{create_handler};
-use scope::{early_scope, EarlyScope, Scope};
-use {Machine, Config, Handler, SpawnError};
+use handler::{Handler, create_handler, set_timeout_opt};
+use scope::{early_scope, EarlyScope, scope, Scope};
+use {Machine, Config, SpawnError, Timeout, Time, Response};
 use SpawnError::NoSlabSpace;
+use response::decompose;
 
 
 /// An object that is used to construct a loop
@@ -54,7 +56,7 @@ use SpawnError::NoSlabSpace;
 ///
 /// [the guide]: http://rotor.readthedocs.org/en/latest/loop_init.html
 pub struct LoopCreator<C, M: Machine<Context=C>> {
-    slab: Slab<M>,
+    slab: Slab<(Option<(Timeout, Time)>, M)>,
     mio: EventLoop<Handler<C, M>>,
 }
 /// Second stage of loop creation
@@ -78,23 +80,24 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
     }
 
     pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), SpawnError<()>>
-        where F: FnOnce(&mut EarlyScope) -> Result<M, Box<Error>>
+        where F: FnOnce(&mut EarlyScope) -> Response<M, Void>
     {
         let ref mut chan = self.mio.channel();
         let ref mut mio = self.mio;
         let res = self.slab.insert_with(|token| {
             let ref mut scope = early_scope(token, chan, mio);
-            match fun(scope) {
-                Ok(x) => x,
-                Err(_) => {
-                // TODO(tailhook) when Slab::insert_with_opt() lands, fix it
-                    panic!("Unimplemented: Slab::insert_with_opt");
-                }
-            }
+            let (mach, void, timeout) =  decompose(token, fun(scope));
+            void.map(|x| unreachable(x));
+            let m = mach.expect("You can't return Response::done() \
+                  from Machine::create() until new release of slab crate. \
+                  (requires insert_with_opt)");
+            let to = set_timeout_opt(timeout, scope);
+            (to, m)
         });
         if res.is_some() {
             Ok(())
         } else {
+            // TODO(tailhook) propagate error from state machine construtor
             Err(NoSlabSpace(()))
         }
     }
@@ -113,11 +116,9 @@ impl<C, M: Machine<Context=C>> LoopCreator<C, M> {
 impl<C, M: Machine<Context=C>> LoopInstance<C, M> {
 
     pub fn add_machine_with<F>(&mut self, fun: F) -> Result<(), SpawnError<()>>
-        where F: FnOnce(&mut Scope<C>) -> Result<M, Box<Error>>
+        where F: FnOnce(&mut Scope<C>) -> Response<M, Void>
     {
-        let ref mut handler = self.handler;
-        let ref mut mio = self.mio;
-        handler.add_machine_with(mio, fun)
+        self.handler.add_machine_with(&mut self.mio, fun)
     }
 
     pub fn run(mut self) -> Result<(), io::Error> {

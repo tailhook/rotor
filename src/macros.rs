@@ -56,11 +56,12 @@ macro_rules! rotor_compose {
             type Context = $ctx_typ;
             type Seed = $cname;
             fn create(seed: $cname, scope: &mut $crate::Scope<$ctx_typ>)
-                -> Result<Self, Box<::std::error::Error>>
+                -> Response<Self, $crate::Void>
             {
                 match seed {
                     $( $cname::$iname (x)
-                        => $crate::Machine::create(x, scope).map($name::$iname),
+                        => $crate::Machine::create(x, scope)
+                            .map($name::$iname, |x| unreachable(x)),
                     )*
                 }
             }

@@ -3,7 +3,6 @@ extern crate nix;
 extern crate argparse;
 extern crate void;
 
-use std::error::Error;
 use std::io::{Write, stderr, stdout};
 use std::os::unix::io::FromRawFd;
 
@@ -41,11 +40,11 @@ rotor_compose!(enum Composed/CSeed <Context> {
 // ^^ note that enum names are different, you need to fix them below
 
 impl Tcp {
-    fn new(sock: TcpStream, scope: &mut EarlyScope) -> Tcp
+    fn new(sock: TcpStream, scope: &mut EarlyScope) -> Response<Tcp, Void>
     {
         scope.register(&sock, EventSet::writable(), PollOpt::level())
             .unwrap();
-        Tcp::Connecting(sock)
+        Response::ok(Tcp::Connecting(sock))
     }
 }
 
@@ -53,7 +52,7 @@ impl Machine for Tcp {
     type Context = Context;
     type Seed = Void;
     fn create(seed: Void, _scope: &mut Scope<Context>)
-        -> Result<Self, Box<Error>>
+        -> Response<Self, Void>
     {
         unreachable(seed);
     }
@@ -109,15 +108,15 @@ impl Machine for Tcp {
 }
 
 impl Stdin {
-    fn new(dest: TcpStream, scope: &mut EarlyScope) -> Stdin
+    fn new(dest: TcpStream, scope: &mut EarlyScope) -> Response<Stdin, Void>
     {
         let stdin = unsafe { UnixStream::from_raw_fd(0) };
         scope.register(&stdin, EventSet::readable(), PollOpt::level())
             .unwrap();
-        Stdin {
+        Response::ok(Stdin {
             input: stdin,
             output: dest,
-        }
+        })
     }
 }
 
@@ -125,7 +124,7 @@ impl Machine for Stdin {
     type Context = Context;
     type Seed = Void;
     fn create(seed: Void, _scope: &mut Scope<Context>)
-        -> Result<Self, Box<Error>>
+        -> Response<Self, Void>
     {
         unreachable(seed);
     }
@@ -206,10 +205,10 @@ fn main() {
     fcntl(0, FcntlArg::F_SETFL(O_NONBLOCK)).expect("fcntl");
 
     loop_creator.add_machine_with(|scope| {
-        Ok(Composed::Tcp(Tcp::new(conn, scope)))
+        Tcp::new(conn, scope).wrap(Composed::Tcp)
     }).unwrap();
     loop_creator.add_machine_with(|scope| {
-        Ok(Composed::Stdin(Stdin::new(conn2, scope)))
+        Stdin::new(conn2, scope).wrap(Composed::Stdin)
     }).unwrap();
     loop_creator.run(Context).unwrap();
 }

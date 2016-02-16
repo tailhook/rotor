@@ -1,9 +1,8 @@
 extern crate rotor;
 
 use std::io::{Write, stderr};
-use std::error::Error;
 
-use rotor::{EventSet, PollOpt, Loop, Config};
+use rotor::{EventSet, PollOpt, Loop, Config, Void};
 use rotor::mio::{TryRead, TryWrite};
 use rotor::mio::tcp::{TcpListener, TcpStream};
 use rotor::{Machine, Response, EarlyScope, Scope};
@@ -17,10 +16,12 @@ enum Echo {
 }
 
 impl Echo {
-    pub fn new(sock: TcpListener, scope: &mut EarlyScope) -> Echo {
+    pub fn new(sock: TcpListener, scope: &mut EarlyScope)
+        -> Response<Echo, Void>
+    {
         scope.register(&sock, EventSet::readable(), PollOpt::edge())
             .unwrap();
-        Echo::Server(sock)
+        Response::ok(Echo::Server(sock))
     }
     fn accept(self) -> Response<Echo, TcpStream> {
         match self {
@@ -48,11 +49,11 @@ impl Machine for Echo {
     type Seed = TcpStream;
 
     fn create(conn: TcpStream, scope: &mut Scope<Context>)
-        -> Result<Self, Box<Error>>
+        -> Response<Self, Void>
     {
         scope.register(&conn, EventSet::readable(), PollOpt::level())
             .unwrap();
-        Ok(Echo::Connection(conn))
+        Response::ok(Echo::Connection(conn))
     }
 
     fn ready(self, _events: EventSet, _scope: &mut Scope<Context>)
@@ -113,7 +114,7 @@ fn main() {
     let mut loop_creator = Loop::new(&Config::new()).unwrap();
     let lst = TcpListener::bind(&"127.0.0.1:3000".parse().unwrap()).unwrap();
     loop_creator.add_machine_with(|scope| {
-        Ok(Echo::new(lst, scope))
+        Echo::new(lst, scope)
     }).unwrap();
     loop_creator.run(Context).unwrap();
 }

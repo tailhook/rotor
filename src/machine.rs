@@ -1,4 +1,4 @@
-use std::error::Error;
+use void::Void;
 
 use {Response, Scope, EventSet, SpawnError};
 
@@ -29,8 +29,10 @@ pub trait Machine: Sized {
     /// socket from a Seed returned by this machine. This method should
     /// **not** be used to create machine by external code. Create a
     /// machine-specific `Type::new` method for the purpose.
+    ///
+    /// Note: we don't support spawning more state machines in create handler
     fn create(seed: Self::Seed, scope: &mut Scope<Self::Context>)
-        -> Result<Self, Box<Error>>;
+        -> Response<Self, Void>;
 
     /// Socket readiness notification
     fn ready(self, events: EventSet, scope: &mut Scope<Self::Context>)
@@ -50,10 +52,11 @@ pub trait Machine: Sized {
     /// into temporary storage, stop accepting and wait until slot is empty
     /// again.
     ///
-    /// Note: it's useless to spawn from here, so we expect Option<Self> here.
+    /// Note: it's useless to spawn from here if the failure was , it almost certainly will fail
+    /// again, but may use a timeout
     fn spawn_error(self, _scope: &mut Scope<Self::Context>,
                    error: SpawnError<Self::Seed>)
-        -> Option<Self>
+        -> Response<Self, Self::Seed>
     {
         panic!("Error spawning state machine: {}", error);
     }

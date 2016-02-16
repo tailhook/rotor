@@ -4,9 +4,10 @@
 //!
 #![crate_name="rotor"]
 
-extern crate void;
 extern crate time;
+extern crate void as void_original;
 extern crate mio as mio_original;
+#[macro_use] extern crate log;
 #[macro_use] extern crate quick_error;
 
 mod handler;
@@ -22,7 +23,6 @@ mod creator;
 mod error;
 mod loop_time;
 
-pub use handler::{Handler};
 pub use machine::Machine;
 pub use scope::{Scope, EarlyScope, GenericScope};
 pub use notify::Notifier;
@@ -37,11 +37,12 @@ pub use compose::{Compose2};
 pub use mio::{EventSet, Evented, PollOpt};
 pub use mio::{Timeout, TimerError};
 pub use mio_original as mio;
+// Re-export void too
+pub use void::{Void};
+pub use void_original as void;
 
 
 /// The response of a state machine to the (mio) action
 ///
 /// This value is returned by many methods of the `Machine` trait.
-// The following struct is not enum
-// merely to keep internal structure private
-pub struct Response<M, N>(Option<M>, Option<N>);
+pub struct Response<M, N>(response::ResponseImpl<M, N>);

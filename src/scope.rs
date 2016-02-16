@@ -60,8 +60,18 @@ pub trait GenericScope {
         interest: EventSet, opt: PollOpt)
         -> io::Result<()>;
     fn deregister(&mut self, io: &Evented) -> io::Result<()>;
+
+    /// Add timeout
+    ///
+    /// This method is **deprecated** use return value of your state machine's
+    /// action to set a timeout
     fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>;
+    /// Clear timeout
+    ///
+    /// This method is **deprecated** (with timeout_ms) use return value of
+    /// your state machine's action to change a timeout
     fn clear_timeout(&mut self, token: Timeout) -> bool;
+
     fn notifier(&mut self) -> Notifier;
     /// Time of the current loop iteration
     ///
@@ -89,11 +99,19 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
         self.loop_api.deregister(io)
     }
 
+    /// Add timeout
+    ///
+    /// This method is **deprecated** use return value of your state machine's
+    /// action to set a timeout
     pub fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
     {
         self.loop_api.timeout_ms(self.token, delay)
     }
 
+    /// Clear timeout
+    ///
+    /// This method is **deprecated** (with timeout_ms) use return value of
+    /// your state machine's action to change a timeout
     pub fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.loop_api.clear_timeout(token)
@@ -137,11 +155,19 @@ impl<'a, C:Sized+'a> GenericScope for Scope<'a, C> {
         self.deregister(io)
     }
 
+    /// Add timeout
+    ///
+    /// This method is **deprecated** use return value of your state machine's
+    /// action to set a timeout
     fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
     {
         self.timeout_ms(delay)
     }
 
+    /// Clear timeout
+    ///
+    /// This method is **deprecated** (with timeout_ms) use return value of
+    /// your state machine's action to change a timeout
     fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.clear_timeout(token)
@@ -193,11 +219,19 @@ impl<'a> EarlyScope<'a> {
         self.loop_api.deregister(io)
     }
 
+    /// Add timeout
+    ///
+    /// This method is **deprecated** use return value of your state machine's
+    /// action to set a timeout
     pub fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
     {
         self.loop_api.timeout_ms(self.token, delay)
     }
 
+    /// Clear timeout
+    ///
+    /// This method is **deprecated** (with timeout_ms) use return value of
+    /// your state machine's action to change a timeout
     pub fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.loop_api.clear_timeout(token)
@@ -238,11 +272,19 @@ impl<'a> GenericScope for EarlyScope<'a> {
         self.deregister(io)
     }
 
+    /// Add timeout
+    ///
+    /// This method is **deprecated** use return value of your state machine's
+    /// action to set a timeout
     fn timeout_ms(&mut self, delay: u64) -> Result<Timeout, TimerError>
     {
         self.timeout_ms(delay)
     }
 
+    /// Clear timeout
+    ///
+    /// This method is **deprecated** (with timeout_ms) use return value of
+    /// your state machine's action to change a timeout
     fn clear_timeout(&mut self, token: Timeout) -> bool
     {
         self.clear_timeout(token)
