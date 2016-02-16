@@ -36,7 +36,9 @@ impl Time {
     /// Zero time value, should be used only as a starting point for unit
     /// tests
     pub fn zero() -> Time {
-        Time(0)
+        // In fact we don't care actual value, but the 1 allows us to
+        // implement NonZero in the future
+        Time(1)
     }
 }
 
