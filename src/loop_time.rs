@@ -28,7 +28,7 @@ pub struct Time(u64);
 impl Add<Duration> for Time {
     type Output = Time;
     fn add(self, rhs: Duration) -> Time {
-        Time(self.0 + rhs.as_secs() + (rhs.subsec_nanos()/1000000) as u64)
+        Time(self.0 + rhs.as_secs()*1000 + (rhs.subsec_nanos()/1000000) as u64)
     }
 }
 
