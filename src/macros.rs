@@ -56,7 +56,7 @@ macro_rules! rotor_compose {
             type Context = $ctx_typ;
             type Seed = $cname;
             fn create(seed: $cname, scope: &mut $crate::Scope<$ctx_typ>)
-                -> Response<Self, $crate::Void>
+                -> $crate::Response<Self, $crate::Void>
             {
                 match seed {
                     $( $cname::$iname (x)
