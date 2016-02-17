@@ -53,3 +53,22 @@ pub fn diff_ms(now: Time, event: Time) -> u64 {
         0
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use super::Time;
+    use std::time::Duration;
+
+
+    #[test]
+    fn test_add_duration() {
+        let tm = Time::zero();
+        assert_eq!(tm + Duration::new(10, 0), Time(10001));
+        assert_eq!(tm + Duration::from_millis(150), Time(151));
+        assert_eq!(tm + Duration::from_millis(12345), Time(12346));
+        assert_eq!(tm + Duration::new(5, 0) + Duration::from_millis(20),
+                   Time(5021));
+    }
+
+}
