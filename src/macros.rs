@@ -61,7 +61,8 @@ macro_rules! rotor_compose {
                 match seed {
                     $( $cname::$iname (x)
                         => $crate::Machine::create(x, scope)
-                            .map($name::$iname, |x| unreachable(x)),
+                            .map($name::$iname,
+                                 |x| $crate::void::unreachable(x)),
                     )*
                 }
             }
