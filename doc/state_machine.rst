@@ -17,17 +17,15 @@ This is just a blanket stub implementation I usually start with, filling
 in methods one by one::
 
     extern crate rotor;
-    extern crate void;
 
-    use std::error::Error;
-    use rotor::{Machine, EventSet, PollOpt, Scope, Response};
-    use void::{unreachable, Void};
+    use rotor::{Machine, EventSet, Scope, Response};
+    use rotor::void::{unreachable, Void};
 
     impl<C> Machine for Fsm<C> {
         type Context = C;
         type Seed = Void;
         fn create(seed: Self::Seed, _scope: &mut Scope<C>)
-            -> Result<Self, Box<Error>>
+            -> Response<Self, Void>
         {
             unreachable(seed)
         }
