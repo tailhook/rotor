@@ -7,6 +7,7 @@ use {Machine};
 use {Evented, EventSet, PollOpt, Timeout, TimerError};
 
 
+#[doc(hidden)]
 pub trait LoopApi {
     fn register(&mut self, io: &Evented, token: Token,
         interest: EventSet, opt: PollOpt) -> io::Result<()>;

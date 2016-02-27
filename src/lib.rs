@@ -32,6 +32,7 @@ pub use creator::{LoopCreator as Loop, LoopInstance};
 pub use error::SpawnError;
 pub use loop_time::Time;
 pub use handler::{Timeo as _Timeo, Notify as _Notify};
+pub use loop_api::{LoopApi as _LoopApi};
 
 pub use compose::{Compose2};
 
