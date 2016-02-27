@@ -25,6 +25,7 @@ mod loop_time;
 
 pub use machine::Machine;
 pub use scope::{Scope, EarlyScope, GenericScope};
+pub use scope::{scope, early_scope};
 pub use notify::{Notifier, WakeupError};
 pub use config::Config;
 pub use creator::{LoopCreator as Loop, LoopInstance};

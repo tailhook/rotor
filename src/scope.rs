@@ -304,6 +304,7 @@ impl<'a> GenericScope for EarlyScope<'a> {
     }
 }
 
+#[doc(hidden)]
 pub fn scope<'x, C, L:LoopApi>(time: Time, token: Token, ctx: &'x mut C,
     channel: &'x mut Sender<Notify>, loop_api: &'x mut L)
     -> Scope<'x, C>
@@ -317,6 +318,7 @@ pub fn scope<'x, C, L:LoopApi>(time: Time, token: Token, ctx: &'x mut C,
     }
 }
 
+#[doc(hidden)]
 pub fn early_scope<'x, L:LoopApi>(token: Token,
     channel: &'x mut Sender<Notify>, loop_api: &'x mut L)
     -> EarlyScope<'x>
