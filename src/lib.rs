@@ -25,12 +25,13 @@ mod loop_time;
 
 pub use machine::Machine;
 pub use scope::{Scope, EarlyScope, GenericScope};
-pub use scope::{scope, early_scope};
+pub use scope::{scope as _scope, early_scope as _early_scope};
 pub use notify::{Notifier, WakeupError};
 pub use config::Config;
 pub use creator::{LoopCreator as Loop, LoopInstance};
 pub use error::SpawnError;
 pub use loop_time::Time;
+pub use handler::{Timeo as _Timeo, Notify as _Notify};
 
 pub use compose::{Compose2};
 

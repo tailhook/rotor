@@ -11,10 +11,12 @@ use loop_time::{make_time, diff_ms};
 use response::{decompose};
 
 
+#[doc(hidden)]
 pub enum Timeo {
     Fsm(Token),
 }
 
+#[doc(hidden)]
 pub enum Notify {
     Fsm(Token),
 }
