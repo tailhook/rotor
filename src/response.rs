@@ -115,6 +115,51 @@ impl<M: Sized, N:Sized> Response<M, N> {
             Error(ref e) => Some(&**e),
         }
     }
+
+    /// Return state machine if response created with `Response::ok(..)`
+    ///
+    /// *Use only for unit tests*
+    ///
+    /// If the response is not okay, the function panics.
+    pub fn expect_machine(self) -> M {
+        match self.0 {
+            ResponseImpl::Normal(x) => x,
+            _ => panic!("expected machine (`Response::ok(x)`)"),
+        }
+    }
+    /// Return a tuple if response created with `Response::spawn(..)`
+    ///
+    /// *Use only for unit tests*
+    ///
+    /// If the response is not `spawn`, the function panics.
+    pub fn expect_spawn(self) -> (M, N) {
+        match self.0 {
+            ResponseImpl::Spawn(x, y) => (x, y),
+            _ => panic!("expected spawn (`Response::spawn(x)`)"),
+        }
+    }
+    /// Returns if response created with `Response::done()`
+    ///
+    /// *Use only for unit tests*
+    ///
+    /// If the response is not done, the function panics.
+    pub fn expect_done(self) {
+        match self.0 {
+            ResponseImpl::Done => {}
+            _ => panic!("expected done (`Response::done()`)"),
+        }
+    }
+    /// Returns an error if response created with `Response::error(..)`
+    ///
+    /// *Use only for unit tests*
+    ///
+    /// If the response does not contain error, the function panics.
+    pub fn expect_error(self) -> Box<Error> {
+        match self.0 {
+            ResponseImpl::Error(e) => e,
+            _ => panic!("expected error (`Response::error(e)`)"),
+        }
+    }
 }
 
 pub fn decompose<M, N>(token: Token, res: Response<M, N>)
