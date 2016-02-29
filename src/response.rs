@@ -127,6 +127,7 @@ impl<M: Sized + Debug, N: Sized + Debug> Response<M, N> {
     pub fn expect_machine(self) -> M {
         match self.0 {
             ResponseImpl::Normal(x) => x,
+            ResponseImpl::Deadline(x, _) => x,
             me => panic!("expected machine (`Response::ok(x)`), \
                 got {:?} instead", me),
         }
