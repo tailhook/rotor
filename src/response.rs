@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::error::Error;
 
 use mio::Token;
@@ -115,7 +116,9 @@ impl<M: Sized, N:Sized> Response<M, N> {
             Error(ref e) => Some(&**e),
         }
     }
+}
 
+impl<M: Sized + Debug, N: Sized + Debug> Response<M, N> {
     /// Return state machine if response created with `Response::ok(..)`
     ///
     /// *Use only for unit tests*
@@ -124,7 +127,8 @@ impl<M: Sized, N:Sized> Response<M, N> {
     pub fn expect_machine(self) -> M {
         match self.0 {
             ResponseImpl::Normal(x) => x,
-            _ => panic!("expected machine (`Response::ok(x)`)"),
+            me => panic!("expected machine (`Response::ok(x)`), \
+                got {:?} instead", me),
         }
     }
     /// Return a tuple if response created with `Response::spawn(..)`
@@ -135,7 +139,8 @@ impl<M: Sized, N:Sized> Response<M, N> {
     pub fn expect_spawn(self) -> (M, N) {
         match self.0 {
             ResponseImpl::Spawn(x, y) => (x, y),
-            _ => panic!("expected spawn (`Response::spawn(x)`)"),
+            me => panic!("expected spawn (`Response::spawn(x)`), \
+                got {:?} instead", me),
         }
     }
     /// Returns if response created with `Response::done()`
@@ -146,7 +151,8 @@ impl<M: Sized, N:Sized> Response<M, N> {
     pub fn expect_done(self) {
         match self.0 {
             ResponseImpl::Done => {}
-            _ => panic!("expected done (`Response::done()`)"),
+            me => panic!("expected done (`Response::done()`), \
+                got {:?} instead", me),
         }
     }
     /// Returns an error if response created with `Response::error(..)`
@@ -157,7 +163,8 @@ impl<M: Sized, N:Sized> Response<M, N> {
     pub fn expect_error(self) -> Box<Error> {
         match self.0 {
             ResponseImpl::Error(e) => e,
-            _ => panic!("expected error (`Response::error(e)`)"),
+            me => panic!("expected error (`Response::error(e)`), \
+                got {:?} instead", me),
         }
     }
 }
