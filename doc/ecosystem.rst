@@ -10,6 +10,8 @@ Libraries
 
 * `rotor-tools <https://crates.io/crates/rotor-tools/>`_ -- a collection of
   small convenience utilities
+* `rotor-test <https://crates.io/crates/rotor-test/>`_ -- a collection of
+  utilities for writing unit tests
 * `rotor-stream <https://crates.io/crates/rotor-stream/>`_ -- an abstraction for
   writing protocols which use TCP or Unix stream sockets
 * `rotor-carbon <https://crates.io/crates/rotor-carbon/>`_ -- implementation of
