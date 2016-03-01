@@ -2,6 +2,7 @@ use std::fmt;
 use std::error::Error;
 
 
+/// Error when spawning a new state machine
 pub enum SpawnError<S: Sized> {
     /// The State Machine Slab capacity is reached
     ///
