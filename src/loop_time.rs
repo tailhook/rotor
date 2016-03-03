@@ -43,7 +43,9 @@ impl Time {
 }
 
 pub fn make_time(base: SteadyTime, now: SteadyTime) -> Time {
-    Time((now - base).num_milliseconds() as u64)
+    Time((now - base).num_milliseconds() as u64
+         // Time starts with 1 not with zero
+         + 1)
 }
 
 pub fn diff_ms(now: Time, event: Time) -> u64 {
