@@ -7,7 +7,7 @@ use void::{Void, unreachable};
 use scope::scope;
 use {SpawnError, Scope, Response, Machine, Time, GenericScope};
 use SpawnError::{NoSlabSpace};
-use loop_time::{make_time, diff_ms};
+use loop_time::{make_time, mio_timeout_ms};
 use response::{decompose};
 
 
@@ -62,7 +62,7 @@ pub fn set_timeout_opt<S: GenericScope>(option: Option<Time>, scope: &mut S)
     -> Option<(Timeout, Time)>
 {
     option.map(|new_ts| {
-        let ms = diff_ms(scope.now(), new_ts);
+        let ms = mio_timeout_ms(scope.now(), new_ts);
         let tok = scope.timeout_ms(ms)
             .expect("Can't insert a timeout. You need to \
                      increase the timer capacity");
@@ -114,7 +114,7 @@ fn machine_loop<M, F>(handler: &mut Handler<M>,
                   from Machine::create() until new release of slab crate. \
                   (requires insert_with_opt)");
             let timepair = newtime.map(|new_ts| {
-                let ms = diff_ms(scope.now(), new_ts);
+                let ms = mio_timeout_ms(scope.now(), new_ts);
                 let tok = scope.timeout_ms(ms)
                     .expect("Can't insert a timeout. You need to \
                              increase the timer capacity");

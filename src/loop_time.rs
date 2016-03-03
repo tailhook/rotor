@@ -48,9 +48,13 @@ pub fn make_time(base: SteadyTime, now: SteadyTime) -> Time {
          + 1)
 }
 
-pub fn diff_ms(now: Time, event: Time) -> u64 {
+pub fn mio_timeout_ms(now: Time, event: Time) -> u64 {
     if event.0 > now.0 {
-        event.0 - now.0
+        // We need +1 because we truncate both old and new timeouts to
+        // millisecond precision, while mio calculates at the nanosecond
+        // precision (but doesn't expose it). So wake up time may be up
+        // to a millisecond smaller then expected
+        event.0 - now.0 + 1
     } else {
         0
     }
