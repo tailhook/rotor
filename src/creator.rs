@@ -1,5 +1,4 @@
 use std::io;
-use std::error::Error;
 
 use mio::EventLoop;
 use mio::util::Slab;
