@@ -35,6 +35,9 @@ macro_rules! rotor_compose {
         { $($x:ident ($y:ty),)* })
     => {
         pub enum $name { $($x ($y),)* }
+        pub enum $cname {
+            $( $x (<$y as $crate::Machine>::Seed), )*
+        }
         rotor_compose!(@machine $name/$cname
             $context_type [] $($x($y),)*);
     };
@@ -42,6 +45,9 @@ macro_rules! rotor_compose {
         { $($x:ident ($y:ty),)* })
     => {
         enum $name { $($x ($y),)* }
+        enum $cname {
+            $( $x (<$y as $crate::Machine>::Seed), )*
+        }
         rotor_compose!(@machine $name/$cname
             $context_type [] $($x($y),)*);
     };
@@ -49,9 +55,6 @@ macro_rules! rotor_compose {
         [ $(<$ctx_name:ident $(: $ctx_bound:ident)*>)* ]
         $($iname:ident ($itype:ty),)*)
     => {
-        enum $cname {
-            $( $iname (<$itype as $crate::Machine>::Seed), )*
-        }
         impl $( <$ctx_name:$ctx_bound> )* $crate::Machine for $name {
             type Context = $ctx_typ;
             type Seed = $cname;
