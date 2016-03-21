@@ -2,9 +2,11 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 
 use mio::{Token, Sender};
+use time::{Timespec};
 
 use handler::Notify;
 use loop_api::LoopApi;
+use loop_time::{estimate_timespec};
 use notify::create_notifier;
 use {Notifier, Time};
 use {Evented, EventSet, PollOpt, Timeout, TimerError};
@@ -72,11 +74,25 @@ pub trait GenericScope {
     /// your state machine's action to change a timeout
     fn clear_timeout(&mut self, token: Timeout) -> bool;
 
+    /// Returns an object that can be used to wake up the enclosed
+    /// state machine
     fn notifier(&mut self) -> Notifier;
+
     /// Time of the current loop iteration
     ///
     /// This is a time that needs to be used for timeouts. It's cheap to use
     fn now(&self) -> Time;
+
+    /// Returns the Timespec that corresponds to the Time in this loop
+    ///
+    /// Note: this is an estimate, because we use *monotonic* time under the
+    /// hood, but `Timespec` is a subject for adjustments of the system clock.
+    ///
+    /// I.e. it is fine to use this time to present it to the user, but it's
+    /// wrong to rely on it in code.
+    fn estimate_timespec(&self, time: Time) -> Timespec {
+        estimate_timespec(self.now(), time)
+    }
 }
 
 impl<'a, C:Sized+'a> Scope<'a, C> {
@@ -132,6 +148,17 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     /// This is a time that needs to be used for timeouts. It's cheap to use
     pub fn now(&self) -> Time {
         self.time
+    }
+
+    /// Returns the Timespec that corresponds to the Time in this loop
+    ///
+    /// Note: this is an estimate, because we use *monotonic* time under the
+    /// hood, but `Timespec` is a subject for adjustments of the system clock.
+    ///
+    /// I.e. it is fine to use this time to present it to the user, but it's
+    /// wrong to rely on it in code.
+    pub fn estimate_timespec(&self, time: Time) -> Timespec {
+        estimate_timespec(self.now(), time)
     }
 }
 
@@ -249,6 +276,17 @@ impl<'a> EarlyScope<'a> {
         // Early scope is only used when creating a context. It's definitely
         // at the start of the things. But we may review this in future.
         Time::zero()
+    }
+
+    /// Returns the Timespec that corresponds to the Time in this loop
+    ///
+    /// Note: this is an estimate, because we use *monotonic* time under the
+    /// hood, but `Timespec` is a subject for adjustments of the system clock.
+    ///
+    /// I.e. it is fine to use this time to present it to the user, but it's
+    /// wrong to rely on it in code.
+    pub fn estimate_timespec(&self, time: Time) -> Timespec {
+        estimate_timespec(self.now(), time)
     }
 }
 

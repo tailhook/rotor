@@ -1,4 +1,4 @@
-use time::SteadyTime;
+use time::{SteadyTime, Timespec, get_time};
 
 use std::ops::Add;
 use std::time::Duration;
@@ -58,6 +58,10 @@ pub fn mio_timeout_ms(now: Time, event: Time) -> u64 {
     } else {
         0
     }
+}
+
+pub fn estimate_timespec(now: Time, value: Time) -> Timespec {
+    get_time() + ::time::Duration::milliseconds(value.0 as i64 - now.0 as i64)
 }
 
 
