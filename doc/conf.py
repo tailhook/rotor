@@ -8,8 +8,8 @@ master_doc = 'index'
 project = u'Rotor'
 copyright = u'2015, Paul Colomiets'
 
-version = '0.2'
-release = '0.2.0'
+version = '0.6'
+release = '0.6.3'
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
 html_theme = 'default'
