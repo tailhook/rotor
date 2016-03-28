@@ -60,7 +60,7 @@ The difference is in the signature of the function::
     }
 
 As you can see the only difference is that loop creator gets ``EarlyScope``
-as an argument and latter gets ``Scope<Context>`` as an argument::
+as an argument and latter gets ``Scope<Context>`` as an argument:
 
 1. Both have ``GenericScope`` implementation, so you can have constructors
    generic over the scope type
