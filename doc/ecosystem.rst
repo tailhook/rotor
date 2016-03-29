@@ -19,9 +19,9 @@ Libraries
 * `rotor-dns <https://crates.io/crates/rotor-dns/>`_ -- DNS support for rotor
 * `rotor-http <https://crates.io/crates/rotor-http/>`_ -- HTTP server and client
   implementation
-* `rotor-redis <https://crates.io/crates/rotor-redis/>`_ -- redis client
+* `rotor-redis <https://github.com/tailhook/rotor-redis/>`_ -- redis client
   implementation
-* `hyper (mio-rotor branch) <https://github.com/hyperium/hyper/tree/mio-rotor>`_
+* `hyper (mio branch) <https://github.com/hyperium/hyper/tree/mio>`_
   the implementation fo HTTP protocol added to hyper itself
 
 
