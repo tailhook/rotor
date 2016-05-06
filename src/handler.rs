@@ -158,9 +158,9 @@ impl<M: Machine> Handler<M>
             let ref mut scope = scope(time, token, context, channel, eloop);
             let (mach, void, timeout) =  decompose(token, fun(scope));
             void.map(|x| unreachable(x));
-            let m = mach.expect("You can't return Response::done() \
-                  from Machine::create() until new release of slab crate. \
-                  (requires insert_with_opt)");
+            let m = mach.expect("You can't return Response::done() or \
+                  Reponse::error() from Machine::create() until new release \
+                  of slab crate. (requires insert_with_opt)");
             let to = set_timeout_opt(timeout, scope);
             (to, m)
         });

@@ -25,9 +25,19 @@ impl<M: Sized, N:Sized> Response<M, N> {
     pub fn done() -> Response<M, N> {
         Response::<M, N>(ResponseImpl::Done)
     }
+
+    /// Stop the state machine with an error.
+    ///
+    /// If `rotor` was compiled with the `log_errors` feature, the error will
+    /// be logged on the warning level.
+
+    // TODO add this documentation once mio has upgraded to slab 0.2.0
+    // Additionally, if this response is returned from `Machine::create`,
+    // the error is passed to `Machine::spawn_error`.
     pub fn error(e: Box<Error>) -> Response<M, N> {
         Response::<M, N>(ResponseImpl::Error(e))
     }
+
     pub fn deadline(self, time: Time) -> Response<M, N> {
         let imp = match self.0 {
             ResponseImpl::Normal(x) => ResponseImpl::Deadline(x, time),
@@ -179,7 +189,7 @@ pub fn decompose<M, N>(token: Token, res: Response<M, N>)
         ResponseImpl::Spawn(m, n) => (Ok(m), Some(n), None),
         ResponseImpl::Done => (Err(None), None, None),
         ResponseImpl::Error(e) => {
-            if cfg!(log_errors) {
+            if cfg!(feature = "log_errors") {
                 warn!("State machine {:?} exited with error: {}", token, e);
             }
             (Err(Some(e)), None, None)
