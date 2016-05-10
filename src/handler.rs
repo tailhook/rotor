@@ -139,6 +139,9 @@ fn machine_loop<M, F>(handler: &mut Handler<M>,
             }).ok();
         }
     }
+    if handler.slab.is_empty() {
+        eloop.shutdown();
+    }
 }
 
 impl<M: Machine> Handler<M>
