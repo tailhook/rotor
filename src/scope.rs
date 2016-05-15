@@ -1,12 +1,12 @@
 use std::io;
 use std::ops::{Deref, DerefMut};
+use std::time::{SystemTime};
 
 use mio::{Token, Sender};
-use time::{Timespec};
 
 use handler::Notify;
 use loop_api::LoopApi;
-use loop_time::{estimate_timespec};
+use loop_time::{estimate_system_time};
 use notify::create_notifier;
 use {Notifier, Time};
 use {Evented, EventSet, PollOpt, Timeout, TimerError};
@@ -83,15 +83,16 @@ pub trait GenericScope {
     /// This is a time that needs to be used for timeouts. It's cheap to use
     fn now(&self) -> Time;
 
-    /// Returns the Timespec that corresponds to the Time in this loop
+    /// Returns the SystemTime that corresponds to the Time in this loop
     ///
     /// Note: this is an estimate, because we use *monotonic* time under the
-    /// hood, but `Timespec` is a subject for adjustments of the system clock.
+    /// hood, but `SystemTime` is a subject for adjustments of the system
+    /// clock.
     ///
     /// I.e. it is fine to use this time to present it to the user, but it's
     /// wrong to rely on it in code.
-    fn estimate_timespec(&self, time: Time) -> Timespec {
-        estimate_timespec(self.now(), time)
+    fn estimate_system_time(&self, time: Time) -> SystemTime {
+        estimate_system_time(self.now(), time)
     }
 }
 
@@ -150,15 +151,16 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
         self.time
     }
 
-    /// Returns the Timespec that corresponds to the Time in this loop
+    /// Returns the SystemTime that corresponds to the Time in this loop
     ///
     /// Note: this is an estimate, because we use *monotonic* time under the
-    /// hood, but `Timespec` is a subject for adjustments of the system clock.
+    /// hood, but `SystemTime` is a subject for adjustments of the system
+    /// clock.
     ///
     /// I.e. it is fine to use this time to present it to the user, but it's
     /// wrong to rely on it in code.
-    pub fn estimate_timespec(&self, time: Time) -> Timespec {
-        estimate_timespec(self.now(), time)
+    pub fn estimate_system_time(&self, time: Time) -> SystemTime {
+        estimate_system_time(self.now(), time)
     }
 }
 
@@ -278,15 +280,16 @@ impl<'a> EarlyScope<'a> {
         Time::zero()
     }
 
-    /// Returns the Timespec that corresponds to the Time in this loop
+    /// Returns the SystemTime that corresponds to the Time in this loop
     ///
     /// Note: this is an estimate, because we use *monotonic* time under the
-    /// hood, but `Timespec` is a subject for adjustments of the system clock.
+    /// hood, but `SystemTime` is a subject for adjustments of the system
+    /// clock.
     ///
     /// I.e. it is fine to use this time to present it to the user, but it's
     /// wrong to rely on it in code.
-    pub fn estimate_timespec(&self, time: Time) -> Timespec {
-        estimate_timespec(self.now(), time)
+    pub fn estimate_system_time(&self, time: Time) -> SystemTime {
+        estimate_system_time(self.now(), time)
     }
 }
 

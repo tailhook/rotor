@@ -4,7 +4,6 @@
 //!
 #![crate_name="rotor"]
 
-extern crate time;
 extern crate void as void_original;
 extern crate mio as mio_original;
 #[macro_use] extern crate log;

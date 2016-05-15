@@ -1,7 +1,6 @@
-use time::{SteadyTime, Timespec, get_time};
 
 use std::ops::Add;
-use std::time::Duration;
+use std::time::{Duration, Instant, SystemTime};
 
 /// The current time
 ///
@@ -25,10 +24,15 @@ use std::time::Duration;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Time(u64);
 
+
+fn millis(dur: Duration) -> u64 {
+    dur.as_secs()*1000 + (dur.subsec_nanos()/1000000) as u64
+}
+
 impl Add<Duration> for Time {
     type Output = Time;
     fn add(self, rhs: Duration) -> Time {
-        Time(self.0 + rhs.as_secs()*1000 + (rhs.subsec_nanos()/1000000) as u64)
+        Time(self.0 + millis(rhs))
     }
 }
 
@@ -42,8 +46,8 @@ impl Time {
     }
 }
 
-pub fn make_time(base: SteadyTime, now: SteadyTime) -> Time {
-    Time((now - base).num_milliseconds() as u64
+pub fn make_time(base: Instant, now: Instant) -> Time {
+    Time(millis(now.duration_since(base))
          // Time starts with 1 not with zero
          + 1)
 }
@@ -60,8 +64,8 @@ pub fn mio_timeout_ms(now: Time, event: Time) -> u64 {
     }
 }
 
-pub fn estimate_timespec(now: Time, value: Time) -> Timespec {
-    get_time() + ::time::Duration::milliseconds(value.0 as i64 - now.0 as i64)
+pub fn estimate_system_time(now: Time, value: Time) -> SystemTime {
+    SystemTime::now() + Duration::from_millis(value.0 - now.0)
 }
 
 

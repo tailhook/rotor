@@ -1,4 +1,4 @@
-use time::SteadyTime;
+use std::time::Instant;
 
 use mio::{self, EventLoop, Token, EventSet, Sender, Timeout};
 use mio::util::Slab;
@@ -44,7 +44,7 @@ pub struct Handler<M: Machine>
     slab: Slab<(Option<(Timeout, Time)>, M)>,
     context: M::Context,
     channel: Sender<Notify>,
-    start_time: SteadyTime,
+    start_time: Instant,
 }
 
 pub fn create_handler<M: Machine>(slab: Slab<(Option<(Timeout, Time)>, M)>,
@@ -55,7 +55,7 @@ pub fn create_handler<M: Machine>(slab: Slab<(Option<(Timeout, Time)>, M)>,
         slab: slab,
         context: context,
         channel: channel,
-        start_time: SteadyTime::now(),
+        start_time: Instant::now(),
     }
 }
 pub fn set_timeout_opt<S: GenericScope>(option: Option<Time>, scope: &mut S)
@@ -147,7 +147,7 @@ fn machine_loop<M, F>(handler: &mut Handler<M>,
 impl<M: Machine> Handler<M>
 {
     pub fn loop_time(&self) -> Time {
-        let now = SteadyTime::now();
+        let now = Instant::now();
         return make_time(self.start_time, now);
     }
     pub fn add_machine_with<F>(&mut self, eloop: &mut EventLoop<Self>, fun: F)
