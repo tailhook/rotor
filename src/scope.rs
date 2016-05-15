@@ -76,7 +76,7 @@ pub trait GenericScope {
 
     /// Returns an object that can be used to wake up the enclosed
     /// state machine
-    fn notifier(&mut self) -> Notifier;
+    fn notifier(&self) -> Notifier;
 
     /// Time of the current loop iteration
     ///
@@ -134,7 +134,7 @@ impl<'a, C:Sized+'a> Scope<'a, C> {
     }
 
     /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
-    pub fn notifier(&mut self) -> Notifier {
+    pub fn notifier(&self) -> Notifier {
         create_notifier(self.token, self.channel)
     }
 
@@ -201,7 +201,7 @@ impl<'a, C:Sized+'a> GenericScope for Scope<'a, C> {
     }
 
     /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
-    fn notifier(&mut self) -> Notifier {
+    fn notifier(&self) -> Notifier {
         self.notifier()
     }
 
@@ -265,7 +265,7 @@ impl<'a> EarlyScope<'a> {
     }
 
     /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
-    pub fn notifier(&mut self) -> Notifier {
+    pub fn notifier(&self) -> Notifier {
         create_notifier(self.token, self.channel)
     }
 
@@ -329,7 +329,7 @@ impl<'a> GenericScope for EarlyScope<'a> {
     }
 
     /// Create a `Notifier` that may be used to `wakeup` enclosed state machine
-    fn notifier(&mut self) -> Notifier {
+    fn notifier(&self) -> Notifier {
         self.notifier()
     }
     /// Time of the current loop iteration
