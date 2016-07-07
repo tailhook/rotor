@@ -21,8 +21,8 @@ Libraries
   implementation
 * `rotor-redis <https://github.com/tailhook/rotor-redis/>`_ -- redis client
   implementation
-* `hyper <https://github.com/hyperium/hyper/>`_
-  the implementation fo HTTP protocol added to hyper itself
+* `hyper <https://github.com/hyperium/hyper/>`_ --
+  the implementation of HTTP protocol added to hyper itself
 * `rotor-capnp <https://github.com/0x1997/rotor-capnp>`_ -- implementation
   of Cap'n'Proto protocol
 
