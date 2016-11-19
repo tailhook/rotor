@@ -1,7 +1,7 @@
-//! The mio-based framework for doing I/O in simple and composable way
+//! The mio-based framework for doing I/O in a simple and composable way.
 //!
-//! More documentation in [the guide](http://rotor.readthedocs.org)
-//!
+//! You may want to look at [the guide](http://rotor.readthedocs.org).
+
 #![crate_name="rotor"]
 
 pub extern crate void as void_original;
