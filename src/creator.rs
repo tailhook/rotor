@@ -1,13 +1,12 @@
 use std::io;
 
-use mio::EventLoop;
-use mio::util::Slab;
+use mio::deprecated::EventLoop;
 use void::{Void, unreachable};
 
 use config::{create_slab, create_loop};
 use handler::{Handler, create_handler, set_timeout_opt};
-use scope::{early_scope, EarlyScope, scope, Scope};
-use {Machine, Config, SpawnError, Timeout, Time, Response};
+use scope::{early_scope, EarlyScope, Scope};
+use {Machine, Config, SpawnError, Timeout, Time, Response, Slab};
 use SpawnError::NoSlabSpace;
 use response::decompose;
 
@@ -83,15 +82,18 @@ impl<M: Machine> LoopCreator<M> {
     {
         let ref mut chan = self.mio.channel();
         let ref mut mio = self.mio;
-        let res = self.slab.insert_with(|token| {
-            let ref mut scope = early_scope(token, chan, mio);
-            let (mach, void, timeout) =  decompose(token, fun(scope));
-            void.map(|x| unreachable(x));
-            let m = mach.expect("You can't return Response::done() \
-                  from Machine::create() until new release of slab crate. \
-                  (requires insert_with_opt)");
-            let to = set_timeout_opt(timeout, scope);
-            (to, m)
+        let res = self.slab.vacant_entry().map(|entry| {
+            let token = entry.index();
+            entry.insert({
+              let ref mut scope = early_scope(token, chan, mio);
+              let (mach, void, timeout) =  decompose(token, fun(scope));
+              void.map(|x| unreachable(x));
+              let m = mach.expect("You can't return Response::done() \
+                    from Machine::create() until new release of slab crate. \
+                    (requires insert_with_opt)");
+              let to = set_timeout_opt(timeout, scope);
+              (to, m)
+            })
         });
         if res.is_some() {
             Ok(())

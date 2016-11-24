@@ -1,4 +1,4 @@
-use mio::EventSet;
+use mio::Ready;
 use void::{Void, unreachable};
 
 use {Machine, Scope, Response};
@@ -37,7 +37,7 @@ impl<X, AA, BB> Machine for Compose2<AA, BB>
             Bs(s) => BB::create(s, scope).map(B, |x| unreachable(x)),
         }
     }
-    fn ready(self, events: EventSet, scope: &mut Scope<X>)
+    fn ready(self, events: Ready, scope: &mut Scope<X>)
         -> Response<Self, Self::Seed>
     {
         use Compose2::*;

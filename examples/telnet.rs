@@ -8,9 +8,9 @@ use std::os::unix::io::FromRawFd;
 
 use void::{Void, unreachable};
 use rotor::{EventSet, PollOpt};
-use rotor::mio::{TryRead, TryWrite};
+use rotor::mio::deprecated::{TryRead, TryWrite};
 use rotor::mio::tcp::{TcpStream};
-use rotor::mio::unix::{UnixStream};
+use rotor::mio::deprecated::unix::{UnixStream};
 use nix::fcntl::{fcntl, FcntlArg, O_NONBLOCK};
 use rotor::{Machine, Response, Scope, EarlyScope}; // Compose2
 use argparse::{ArgumentParser, Store};

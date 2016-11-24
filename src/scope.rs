@@ -2,7 +2,8 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 use std::time::{SystemTime};
 
-use mio::{Token, Sender};
+use mio::Token;
+use mio::deprecated::Sender;
 
 use handler::Notify;
 use loop_api::LoopApi;

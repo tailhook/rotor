@@ -1,4 +1,5 @@
-use mio::{Token, Sender};
+use mio::Token;
+use mio::deprecated::Sender;
 
 use handler::{Notify};
 
@@ -50,7 +51,7 @@ impl Notifier {
     ///
     ///
     pub fn wakeup(&self) -> Result<(), WakeupError> {
-        use mio::NotifyError::*;
+        use mio::deprecated::NotifyError::*;
         match self.channel.send(Notify::Fsm(self.token)) {
             Ok(()) => Ok(()),
             Err(Closed(_)) => Err(WakeupError::Closed),
