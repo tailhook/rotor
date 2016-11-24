@@ -1,7 +1,9 @@
 use std::time::Instant;
 
-use mio::{self, EventLoop, Token, EventSet, Sender, Timeout};
-use mio::util::Slab;
+use Slab;
+use mio::{self, Token, Ready};
+use mio::timer::Timeout;
+use mio::deprecated::{EventLoop, Sender};
 use void::{Void, unreachable};
 
 use scope::scope;
@@ -76,7 +78,7 @@ fn replacer<C, M, N>(token: Token,
     -> Option<(Option<(Timeout, Time)>, M)>
 {
     let (mach, new, newtime) = decompose(token, resp);
-    let rtime = if newtime != old_timeo.map(|(_, x)| x) {
+    let rtime = if newtime != old_timeo.clone().map(|(_, x)| x) {
         if let Some((tok, _)) = old_timeo {
             scope.clear_timeout(tok);
         }
@@ -86,6 +88,19 @@ fn replacer<C, M, N>(token: Token,
     };
     *creator = new;
     mach.map(|m| (rtime, m)).ok() // the error is already logged in decompose()
+}
+
+fn replace<M, F>(slab: &mut Slab<(Option<(Timeout, Time)>, M)>, token: Token, fun: F, scope: &mut Scope<M::Context>, creator: &mut Option<M::Seed>)
+    where M: Machine,
+          F: FnOnce(M, &mut Scope<M::Context>) -> Response<M, M::Seed>
+{
+    slab.entry(token).and_then(|entry| {
+      let (timeo, m) = entry.remove();
+      replacer(token, fun(m, scope), timeo, scope, creator)
+    }).map(|new_val|{
+      let entry = slab.vacant_entry().expect("The entry was just freed.");
+      entry.insert(new_val)
+    });
 }
 
 fn machine_loop<M, F>(handler: &mut Handler<M>,
@@ -99,44 +114,41 @@ fn machine_loop<M, F>(handler: &mut Handler<M>,
     let mut creator = None;
     {
         let ref mut scope = scope(time, token, context, channel, eloop);
-        handler.slab.replace_with(token, |(timeo, m)| {
-            replacer(token, fun(m, scope), timeo, scope, &mut creator)
-        }).ok();  // Spurious events are ok in mio
+        replace(&mut handler.slab, token, fun, scope, &mut creator)
+        // Spurious events are ok in mio
     }
     while let Some(new) = creator.take() {
         let mut new = Some(new);
-        let ins = handler.slab.insert_with(|token| {
-            let ref mut scope = scope(time, token, context, channel, eloop);
-            let (mach, newm, newtime) = decompose(token,
-                M::create(new.take().unwrap(), scope));
-            newm.map(|x| unreachable(x));
-            let m = mach.expect("You can't return Response::done() \
-                  from Machine::create() until new release of slab crate. \
-                  (requires insert_with_opt)");
-            let timepair = newtime.map(|new_ts| {
-                let ms = mio_timeout_ms(scope.now(), new_ts);
-                let tok = scope.timeout_ms(ms)
-                    .expect("Can't insert a timeout. You need to \
-                             increase the timer capacity");
-                (tok, new_ts)
-            });
-            (timepair, m)
-        });
-        if ins.is_none() {
+        let ins = handler.slab.vacant_entry().map(|entry| {
+            let token = entry.index();
+            entry.insert({
+              let ref mut scope = scope(time, token, context, channel, eloop);
+              let (mach, newm, newtime) = decompose(token,
+                  M::create(new.take().unwrap(), scope));
+              newm.map(|x| unreachable(x));
+              let m = mach.expect("You can't return Response::done() \
+                    from Machine::create() until new release of slab crate. \
+                    (requires insert_with_opt)");
+              let timepair = newtime.map(|new_ts| {
+                  let ms = mio_timeout_ms(scope.now(), new_ts);
+                  let tok = scope.timeout_ms(ms)
+                      .expect("Can't insert a timeout. You need to \
+                               increase the timer capacity");
+                  (tok, new_ts)
+              });
+              (timepair, m)
+            })
+        }).is_none();
+        if ins {
             // TODO(tailhook) process other errors here, when they can
             // be returned from handler
             let err = NoSlabSpace(new.expect("expecting seed is still here"));
 
             let ref mut scope = scope(time, token, context, channel, eloop);
-            handler.slab.replace_with(token, |(timeo, m)| {
-                replacer(token, m.spawn_error(scope, err),
-                    timeo, scope, &mut creator)
-            }).ok();
+            replace(&mut handler.slab, token, |m, scope| m.spawn_error(scope, err), scope, &mut creator)
         } else {
             let ref mut scope = scope(time, token, context, channel, eloop);
-            handler.slab.replace_with(token, |(timeo, m)| {
-                replacer(token, m.spawned(scope), timeo, scope, &mut creator)
-            }).ok();
+            replace(&mut handler.slab, token, |m, scope| m.spawned(scope), scope, &mut creator)
         }
     }
     if handler.slab.is_empty() {
@@ -157,7 +169,9 @@ impl<M: Machine> Handler<M>
         let time = self.loop_time();
         let ref mut context = self.context;
         let ref mut channel = self.channel;
-        let res = self.slab.insert_with(|token| {
+        let res = self.slab.vacant_entry().map(|entry| {
+          let token = entry.index();
+          entry.insert({
             let ref mut scope = scope(time, token, context, channel, eloop);
             let (mach, void, timeout) =  decompose(token, fun(scope));
             void.map(|x| unreachable(x));
@@ -166,6 +180,7 @@ impl<M: Machine> Handler<M>
                   of slab crate. (requires insert_with_opt)");
             let to = set_timeout_opt(timeout, scope);
             (to, m)
+          });
         });
         if res.is_some() {
             Ok(())
@@ -176,12 +191,12 @@ impl<M: Machine> Handler<M>
     }
 }
 
-impl<M: Machine> mio::Handler for Handler<M>
+impl<M: Machine> mio::deprecated::Handler for Handler<M>
 {
     type Message = Notify;
     type Timeout = Timeo;
     fn ready<'x>(&mut self, eloop: &'x mut EventLoop<Self>,
-        token: Token, events: EventSet)
+        token: Token, events: Ready)
     {
         machine_loop(self, eloop, token, |m, scope| { m.ready(events, scope) })
     }

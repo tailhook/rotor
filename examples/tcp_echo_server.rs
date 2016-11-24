@@ -3,7 +3,7 @@ extern crate rotor;
 use std::io::{Write, stderr};
 
 use rotor::{EventSet, PollOpt, Loop, Config, Void};
-use rotor::mio::{TryRead, TryWrite};
+use rotor::mio::deprecated::{TryRead, TryWrite};
 use rotor::mio::tcp::{TcpListener, TcpStream};
 use rotor::{Machine, Response, EarlyScope, Scope};
 
@@ -27,11 +27,8 @@ impl Echo {
         match self {
             Echo::Server(sock) => {
                 match sock.accept() {
-                    Ok(Some((conn, _))) => {
+                    Ok((conn, _)) => {
                         Response::spawn(Echo::Server(sock), conn)
-                    }
-                    Ok(None) => {
-                        Response::ok(Echo::Server(sock))
                     }
                     Err(e) => {
                         writeln!(&mut stderr(), "Error: {}", e).ok();

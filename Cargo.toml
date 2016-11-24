@@ -12,7 +12,8 @@ version = "0.6.3"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-mio = "0.5"
+mio = "0.6.1"
+slab = "0.3"
 quick-error = "1.0.0"
 log = "0.3.1"
 void = "1.0.0"

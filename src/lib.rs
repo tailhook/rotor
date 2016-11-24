@@ -6,6 +6,7 @@
 
 pub extern crate void as void_original;
 pub extern crate mio as mio_original;
+pub extern crate slab;
 #[macro_use] extern crate log;
 #[macro_use] extern crate quick_error;
 
@@ -36,13 +37,15 @@ pub use loop_api::{LoopApi as _LoopApi};
 pub use compose::{Compose2};
 
 // Re-export mio types used in rotor
-pub use mio::{EventSet, Evented, PollOpt};
-pub use mio::{Timeout, TimerError};
+pub use mio::{Ready as EventSet, Evented, PollOpt};
+pub use mio::timer::{Timeout, TimerError};
 pub use mio_original as mio;
 // Re-export void too
 pub use void::{Void};
 pub use void_original as void;
 
+/// Slab
+pub type Slab<T> = slab::Slab<T, mio::Token>;
 
 /// The response of a state machine to the (mio) action
 ///

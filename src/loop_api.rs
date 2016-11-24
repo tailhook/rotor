@@ -1,6 +1,8 @@
 use std::io;
+use std::time::Duration;
 
-use mio::{Token, EventLoop};
+use mio::Token;
+use mio::deprecated::EventLoop;
 
 use handler::{Handler, Timeo};
 use {Machine};
@@ -42,11 +44,11 @@ impl<'a, M: Machine> LoopApi for EventLoop<Handler<M>>
     fn timeout_ms(&mut self, token: Token, delay: u64)
         -> Result<Timeout, TimerError>
     {
-        self.timeout_ms( Timeo::Fsm(token), delay)
+        self.timeout( Timeo::Fsm(token), Duration::from_millis(delay))
     }
     fn clear_timeout(&mut self, token: Timeout) -> bool
     {
-        self.clear_timeout(token)
+        self.clear_timeout(&token)
     }
     fn shutdown(&mut self) {
         self.shutdown()
