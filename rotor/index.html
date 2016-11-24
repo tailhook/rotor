@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `rotor` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, rotor">
+
+    <title>rotor - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'rotor', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>rotor</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-0' class='srclink' href='../src/rotor/src/lib.rs.html#1-53' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>The mio-based framework for doing I/O in a simple and composable way.</p>
+
+<p>You may want to look at <a href="http://rotor.readthedocs.org">the guide</a>.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub extern crate <a class='mod' href='../rotor/void/index.html' title='rotor::void'>void</a> as void_original;</code></td></tr><tr><td><code>pub extern crate <a class='mod' href='../rotor/mio/index.html' title='rotor::mio'>mio</a> as mio_original;</code></td></tr><tr><td><code>pub extern crate <a class='mod' href='../slab/index.html' title='slab'>slab</a>;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='mio/index.html'
+                                  title='rotor::mio'>mio</a></td>
+                           <td class='docblock-short'>
+                                <p>A fast, low-level IO library for Rust focusing on non-blocking APIs, event
+notification, and other useful utilities for building high performance IO
+apps.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='void/index.html'
+                                  title='rotor::void'>void</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='macro' href='macro.rotor_compose.html'
+                                  title='rotor::rotor_compose'>rotor_compose</a></td>
+                           <td class='docblock-short'>
+                                <p>Compose multiple state machines into single type</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Config.html'
+                                  title='rotor::Config'>Config</a></td>
+                           <td class='docblock-short'>
+                                <p>Event loop configuration</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.EarlyScope.html'
+                                  title='rotor::EarlyScope'>EarlyScope</a></td>
+                           <td class='docblock-short'>
+                                <p>This is a structure that works similarly to Scope, but doesn&#39;t
+have a context</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.EventSet.html'
+                                  title='rotor::EventSet'>EventSet</a></td>
+                           <td class='docblock-short'>
+                                <p>A set of readiness events returned by <code>Poll</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Loop.html'
+                                  title='rotor::Loop'>Loop</a></td>
+                           <td class='docblock-short'>
+                                <p>An object that is used to construct a loop</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.LoopInstance.html'
+                                  title='rotor::LoopInstance'>LoopInstance</a></td>
+                           <td class='docblock-short'>
+                                <p>Second stage of loop creation</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Notifier.html'
+                                  title='rotor::Notifier'>Notifier</a></td>
+                           <td class='docblock-short'>
+                                <p>The object used to wakeup unrelated state machine</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.PollOpt.html'
+                                  title='rotor::PollOpt'>PollOpt</a></td>
+                           <td class='docblock-short'>
+                                <p>Configures readiness polling behavior for a given <code>Evented</code> value.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Response.html'
+                                  title='rotor::Response'>Response</a></td>
+                           <td class='docblock-short'>
+                                <p>The response of a state machine to the (mio) action</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Scope.html'
+                                  title='rotor::Scope'>Scope</a></td>
+                           <td class='docblock-short'>
+                                <p>The structure passed to every action handler</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Time.html'
+                                  title='rotor::Time'>Time</a></td>
+                           <td class='docblock-short'>
+                                <p>The current time</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Timeout.html'
+                                  title='rotor::Timeout'>Timeout</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.TimerError.html'
+                                  title='rotor::TimerError'>TimerError</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.Compose2.html'
+                                  title='rotor::Compose2'>Compose2</a></td>
+                           <td class='docblock-short'>
+                                <p>Composes two state machines</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.SpawnError.html'
+                                  title='rotor::SpawnError'>SpawnError</a></td>
+                           <td class='docblock-short'>
+                                <p>Error when spawning a new state machine</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.Void.html'
+                                  title='rotor::Void'>Void</a></td>
+                           <td class='docblock-short'>
+                                <p>The empty type for cases which can&#39;t occur.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.WakeupError.html'
+                                  title='rotor::WakeupError'>WakeupError</a></td>
+                           <td class='docblock-short'>
+                                <p>Error when waking up a connection</p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.Evented.html'
+                                  title='rotor::Evented'>Evented</a></td>
+                           <td class='docblock-short'>
+                                <p>A value that may be registered with an <code>EventLoop</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.GenericScope.html'
+                                  title='rotor::GenericScope'>GenericScope</a></td>
+                           <td class='docblock-short'>
+                                <p>A common part of <code>Scope</code> and <code>EarlyScope</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.Machine.html'
+                                  title='rotor::Machine'>Machine</a></td>
+                           <td class='docblock-short'>
+                                <p>A trait that every state machine in the loop must implement</p>
+                           </td>
+                       </tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.Slab.html'
+                                  title='rotor::Slab'>Slab</a></td>
+                           <td class='docblock-short'>
+                                <p>Slab</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "rotor";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

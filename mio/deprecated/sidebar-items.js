@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["NotifyError",""],["Shutdown",""]],"mod":[["unix",""]],"struct":[["EventLoop","Single threaded IO event loop."],["EventLoopBuilder",""],["Sender","Sends messages to the EventLoop from other threads."]],"trait":[["Handler",""],["TryAccept",""],["TryRead",""],["TryWrite",""]]});

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Poll` struct in crate `mio`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Poll">
+
+    <title>mio::Poll - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>mio</a></p><script>window.sidebarCurrent = {name: 'Poll', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>mio</a>::<wbr><a class='struct' href=''>Poll</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-683' class='srclink' href='../src/mio/poll.rs.html#54-63' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Poll { /* fields omitted */ }</pre><div class='docblock'><p>Polls for readiness events on all registered values.</p>
+
+<p>The <code>Poll</code> type acts as an interface allowing a program to wait on a set of
+IO handles until one or more become &quot;ready&quot; to be operated on. An IO handle
+is considered ready to operate on when the given operation can complete
+without blocking.</p>
+
+<p>To use <code>Poll</code>, an IO handle must first be registered with the <code>Poll</code>
+instance using the <code>register()</code> handle. An <code>Ready</code> representing the
+program&#39;s interest in the socket is specified as well as an arbitrary
+<code>Token</code> which is used to identify the IO handle in the future.</p>
+
+<h2 id='edge-triggered-and-level-triggered' class='section-header'><a href='#edge-triggered-and-level-triggered'>Edge-triggered and level-triggered</a></h2>
+<p>An IO handle registration may request edge-triggered notifications or
+level-triggered notifications. This is done by specifying the <code>PollOpt</code>
+argument to <code>register()</code> and <code>reregister()</code>.</p>
+
+<h2 id='portability' class='section-header'><a href='#portability'>Portability</a></h2>
+<p>Cross platform portability is provided for Mio&#39;s TCP &amp; UDP implementations.</p>
+
+<h2 id='examples' class='section-header'><a href='#examples'>Examples</a></h2>
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>mio</span>::<span class='op'>*</span>;
+<span class='kw'>use</span> <span class='ident'>mio</span>::<span class='ident'>tcp</span>::<span class='op'>*</span>;
+
+<span class='comment'>// Construct a new `Poll` handle as well as the `Events` we&#39;ll store into</span>
+<span class='kw'>let</span> <span class='ident'>poll</span> <span class='op'>=</span> <span class='ident'>Poll</span>::<span class='ident'>new</span>().<span class='ident'>unwrap</span>();
+<span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>events</span> <span class='op'>=</span> <span class='ident'>Events</span>::<span class='ident'>with_capacity</span>(<span class='number'>1024</span>);
+
+<span class='comment'>// Connect the stream</span>
+<span class='kw'>let</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>TcpStream</span>::<span class='ident'>connect</span>(<span class='kw-2'>&amp;</span><span class='string'>&quot;173.194.33.80:80&quot;</span>.<span class='ident'>parse</span>().<span class='ident'>unwrap</span>()).<span class='ident'>unwrap</span>();
+
+<span class='comment'>// Register the stream with `Poll`</span>
+<span class='ident'>poll</span>.<span class='ident'>register</span>(<span class='kw-2'>&amp;</span><span class='ident'>stream</span>, <span class='ident'>Token</span>(<span class='number'>0</span>), <span class='ident'>Ready</span>::<span class='ident'>all</span>(), <span class='ident'>PollOpt</span>::<span class='ident'>edge</span>()).<span class='ident'>unwrap</span>();
+
+<span class='comment'>// Wait for the socket to become ready</span>
+<span class='ident'>poll</span>.<span class='ident'>poll</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>events</span>, <span class='prelude-val'>None</span>).<span class='ident'>unwrap</span>();<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../mio/struct.Poll.html' title='mio::Poll'>Poll</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-728' class='srclink' href='../src/mio/poll.rs.html#169-258' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>() -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../mio/struct.Poll.html' title='mio::Poll'>Poll</a>&gt;</code></span></h4>
+<div class='docblock'><p>Return a new <code>Poll</code> handle using a default configuration.</p>
+</div><h4 id='method.register' class='method'><span id='register.v' class='invisible'><code>fn <a href='#method.register' class='fnname'>register</a>&lt;E:&nbsp;?<a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a>&gt;(&amp;self, io: &amp;E, token: <a class='struct' href='../mio/struct.Token.html' title='mio::Token'>Token</a>, interest: <a class='struct' href='../mio/struct.Ready.html' title='mio::Ready'>Ready</a>, opts: <a class='struct' href='../mio/struct.PollOpt.html' title='mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where E: <a class='trait' href='../mio/trait.Evented.html' title='mio::Evented'>Evented</a></span></code></span></h4>
+<div class='docblock'><p>Register an <code>Evented</code> handle with the <code>Poll</code> instance.</p>
+</div><h4 id='method.reregister' class='method'><span id='reregister.v' class='invisible'><code>fn <a href='#method.reregister' class='fnname'>reregister</a>&lt;E:&nbsp;?<a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a>&gt;(&amp;self, io: &amp;E, token: <a class='struct' href='../mio/struct.Token.html' title='mio::Token'>Token</a>, interest: <a class='struct' href='../mio/struct.Ready.html' title='mio::Ready'>Ready</a>, opts: <a class='struct' href='../mio/struct.PollOpt.html' title='mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where E: <a class='trait' href='../mio/trait.Evented.html' title='mio::Evented'>Evented</a></span></code></span></h4>
+<div class='docblock'><p>Re-register an <code>Evented</code> handle with the <code>Poll</code> instance.</p>
+</div><h4 id='method.deregister' class='method'><span id='deregister.v' class='invisible'><code>fn <a href='#method.deregister' class='fnname'>deregister</a>&lt;E:&nbsp;?<a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a>&gt;(&amp;self, io: &amp;E) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where E: <a class='trait' href='../mio/trait.Evented.html' title='mio::Evented'>Evented</a></span></code></span></h4>
+<div class='docblock'><p>Deregister an <code>Evented</code> handle with the <code>Poll</code> instance.</p>
+</div><h4 id='method.poll' class='method'><span id='poll.v' class='invisible'><code>fn <a href='#method.poll' class='fnname'>poll</a>(&amp;self, events: &amp;mut <a class='struct' href='../mio/struct.Events.html' title='mio::Events'>Events</a>, timeout: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/time/duration/struct.Duration.html' title='std::time::duration::Duration'>Duration</a>&gt;) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>&gt;</code></span></h4>
+<div class='docblock'><p>Block the current thread and wait until any <code>Evented</code> values registered
+with the <code>Poll</code> instance are ready or the given timeout has elapsed.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../mio/struct.Poll.html' title='mio::Poll'>Poll</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-788' class='srclink' href='../src/mio/poll.rs.html#272-276' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, fmt: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "mio";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

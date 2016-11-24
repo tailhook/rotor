@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `EarlyScope` struct in crate `rotor`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, EarlyScope">
+
+    <title>rotor::EarlyScope - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>rotor</a></p><script>window.sidebarCurrent = {name: 'EarlyScope', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>rotor</a>::<wbr><a class='struct' href=''>EarlyScope</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-192' class='srclink' href='../src/rotor/src/scope.rs.html#48-52' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct EarlyScope&lt;'a&gt; { /* fields omitted */ }</pre><div class='docblock'><p>This is a structure that works similarly to Scope, but doesn&#39;t
+have a context</p>
+
+<p>The primary (and probably the only) use case for the <code>EarlyScope</code> is to
+allow to create a state machine before context has been intialized. This
+is useful if you want to put a <code>Notifier</code> of the FSM to a context itself.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='struct' href='../rotor/struct.EarlyScope.html' title='rotor::EarlyScope'>EarlyScope</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-292' class='srclink' href='../src/rotor/src/scope.rs.html#232-295' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.register' class='method'><span id='register.v' class='invisible'><code>fn <a href='#method.register' class='fnname'>register</a>(&amp;mut self, io: &amp;<a class='trait' href='../rotor/mio/trait.Evented.html' title='rotor::mio::Evented'>Evented</a>, interest: <a class='struct' href='../rotor/mio/struct.Ready.html' title='rotor::mio::Ready'>EventSet</a>, opt: <a class='struct' href='../rotor/mio/struct.PollOpt.html' title='rotor::mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.reregister' class='method'><span id='reregister.v' class='invisible'><code>fn <a href='#method.reregister' class='fnname'>reregister</a>(&amp;mut self, io: &amp;<a class='trait' href='../rotor/mio/trait.Evented.html' title='rotor::mio::Evented'>Evented</a>, interest: <a class='struct' href='../rotor/mio/struct.Ready.html' title='rotor::mio::Ready'>EventSet</a>, opt: <a class='struct' href='../rotor/mio/struct.PollOpt.html' title='rotor::mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.deregister' class='method'><span id='deregister.v' class='invisible'><code>fn <a href='#method.deregister' class='fnname'>deregister</a>(&amp;mut self, io: &amp;<a class='trait' href='../rotor/mio/trait.Evented.html' title='rotor::mio::Evented'>Evented</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.timeout_ms' class='method'><span id='timeout_ms.v' class='invisible'><code>fn <a href='#method.timeout_ms' class='fnname'>timeout_ms</a>(&amp;mut self, delay: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u64.html'>u64</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../rotor/mio/timer/struct.Timeout.html' title='rotor::mio::timer::Timeout'>Timeout</a>,&nbsp;<a class='struct' href='../rotor/mio/timer/struct.TimerError.html' title='rotor::mio::timer::TimerError'>TimerError</a>&gt;</code></span></h4>
+<div class='docblock'><p>Add timeout</p>
+
+<p>This method is <strong>deprecated</strong> use return value of your state machine&#39;s
+action to set a timeout</p>
+</div><h4 id='method.clear_timeout' class='method'><span id='clear_timeout.v' class='invisible'><code>fn <a href='#method.clear_timeout' class='fnname'>clear_timeout</a>(&amp;mut self, token: <a class='struct' href='../rotor/mio/timer/struct.Timeout.html' title='rotor::mio::timer::Timeout'>Timeout</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>Clear timeout</p>
+
+<p>This method is <strong>deprecated</strong> (with timeout_ms) use return value of
+your state machine&#39;s action to change a timeout</p>
+</div><h4 id='method.notifier' class='method'><span id='notifier.v' class='invisible'><code>fn <a href='#method.notifier' class='fnname'>notifier</a>(&amp;self) -&gt; <a class='struct' href='../rotor/struct.Notifier.html' title='rotor::Notifier'>Notifier</a></code></span></h4>
+<div class='docblock'><p>Create a <code>Notifier</code> that may be used to <code>wakeup</code> enclosed state machine</p>
+</div><h4 id='method.now' class='method'><span id='now.v' class='invisible'><code>fn <a href='#method.now' class='fnname'>now</a>(&amp;self) -&gt; <a class='struct' href='../rotor/struct.Time.html' title='rotor::Time'>Time</a></code></span></h4>
+<div class='docblock'><p>Time of the current loop iteration</p>
+
+<p>This is a time that needs to be used for timeouts. It&#39;s cheap to use</p>
+</div><h4 id='method.estimate_system_time' class='method'><span id='estimate_system_time.v' class='invisible'><code>fn <a href='#method.estimate_system_time' class='fnname'>estimate_system_time</a>(&amp;self, time: <a class='struct' href='../rotor/struct.Time.html' title='rotor::Time'>Time</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/std/time/struct.SystemTime.html' title='std::time::SystemTime'>SystemTime</a></code></span></h4>
+<div class='docblock'><p>Returns the SystemTime that corresponds to the Time in this loop</p>
+
+<p>Note: this is an estimate, because we use <em>monotonic</em> time under the
+hood, but <code>SystemTime</code> is a subject for adjustments of the system
+clock.</p>
+
+<p>I.e. it is fine to use this time to present it to the user, but it&#39;s
+wrong to rely on it in code.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='../rotor/trait.GenericScope.html' title='rotor::GenericScope'>GenericScope</a> for <a class='struct' href='../rotor/struct.EarlyScope.html' title='rotor::EarlyScope'>EarlyScope</a>&lt;'a&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-320' class='srclink' href='../src/rotor/src/scope.rs.html#297-347' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.register-1' class='method'><span id='register.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.register' class='fnname'>register</a>(&amp;mut self, io: &amp;<a class='trait' href='../rotor/mio/trait.Evented.html' title='rotor::mio::Evented'>Evented</a>, interest: <a class='struct' href='../rotor/mio/struct.Ready.html' title='rotor::mio::Ready'>EventSet</a>, opt: <a class='struct' href='../rotor/mio/struct.PollOpt.html' title='rotor::mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.reregister-1' class='method'><span id='reregister.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.reregister' class='fnname'>reregister</a>(&amp;mut self, io: &amp;<a class='trait' href='../rotor/mio/trait.Evented.html' title='rotor::mio::Evented'>Evented</a>, interest: <a class='struct' href='../rotor/mio/struct.Ready.html' title='rotor::mio::Ready'>EventSet</a>, opt: <a class='struct' href='../rotor/mio/struct.PollOpt.html' title='rotor::mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.deregister-1' class='method'><span id='deregister.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.deregister' class='fnname'>deregister</a>(&amp;mut self, io: &amp;<a class='trait' href='../rotor/mio/trait.Evented.html' title='rotor::mio::Evented'>Evented</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.timeout_ms-1' class='method'><span id='timeout_ms.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.timeout_ms' class='fnname'>timeout_ms</a>(&amp;mut self, delay: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u64.html'>u64</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../rotor/mio/timer/struct.Timeout.html' title='rotor::mio::timer::Timeout'>Timeout</a>,&nbsp;<a class='struct' href='../rotor/mio/timer/struct.TimerError.html' title='rotor::mio::timer::TimerError'>TimerError</a>&gt;</code></span></h4>
+<div class='docblock'><p>Add timeout</p>
+
+<p>This method is <strong>deprecated</strong> use return value of your state machine&#39;s
+action to set a timeout</p>
+</div><h4 id='method.clear_timeout-1' class='method'><span id='clear_timeout.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.clear_timeout' class='fnname'>clear_timeout</a>(&amp;mut self, token: <a class='struct' href='../rotor/mio/timer/struct.Timeout.html' title='rotor::mio::timer::Timeout'>Timeout</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>Clear timeout</p>
+
+<p>This method is <strong>deprecated</strong> (with timeout_ms) use return value of
+your state machine&#39;s action to change a timeout</p>
+</div><h4 id='method.notifier-1' class='method'><span id='notifier.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.notifier' class='fnname'>notifier</a>(&amp;self) -&gt; <a class='struct' href='../rotor/struct.Notifier.html' title='rotor::Notifier'>Notifier</a></code></span></h4>
+<div class='docblock'><p>Create a <code>Notifier</code> that may be used to <code>wakeup</code> enclosed state machine</p>
+</div><h4 id='method.now-1' class='method'><span id='now.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#tymethod.now' class='fnname'>now</a>(&amp;self) -&gt; <a class='struct' href='../rotor/struct.Time.html' title='rotor::Time'>Time</a></code></span></h4>
+<div class='docblock'><p>Time of the current loop iteration</p>
+
+<p>This is a time that needs to be used for timeouts. It&#39;s cheap to use</p>
+</div><h4 id='method.estimate_system_time-1' class='method'><span id='estimate_system_time.v-1' class='invisible'><code>fn <a href='../rotor/trait.GenericScope.html#method.estimate_system_time' class='fnname'>estimate_system_time</a>(&amp;self, time: <a class='struct' href='../rotor/struct.Time.html' title='rotor::Time'>Time</a>) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/std/time/struct.SystemTime.html' title='std::time::SystemTime'>SystemTime</a></code></span></h4>
+<div class='docblock'><p>Returns the SystemTime that corresponds to the Time in this loop <a href="../rotor/trait.GenericScope.html#method.estimate_system_time">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "rotor";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

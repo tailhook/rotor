@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `TcpListener` struct in crate `mio`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, TcpListener">
+
+    <title>mio::tcp::TcpListener - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>mio</a>::<wbr><a href='index.html'>tcp</a></p><script>window.sidebarCurrent = {name: 'TcpListener', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>mio</a>::<wbr><a href='index.html'>tcp</a>::<wbr><a class='struct' href=''>TcpListener</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-453' class='srclink' href='../../src/mio/net/tcp.rs.html#252-255' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct TcpListener { /* fields omitted */ }</pre><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-463' class='srclink' href='../../src/mio/net/tcp.rs.html#257-395' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.bind' class='method'><span id='bind.v' class='invisible'><code>fn <a href='#method.bind' class='fnname'>bind</a>(addr: &amp;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a>&gt;</code></span></h4>
+<div class='docblock'><p>Convenience method to bind a new TCP listener to the specified address
+to receive new connections.</p>
+
+<p>This function will take the following steps:</p>
+
+<ol>
+<li>Create a new TCP socket.</li>
+<li>Set the <code>SO_REUSEADDR</code> option on the socket.</li>
+<li>Bind the socket to the specified address.</li>
+<li>Call <code>listen</code> on the socket to prepare it to receive new connections.</li>
+</ol>
+
+<p>If fine-grained control over the binding and listening process for a
+socket is desired then the <code>net2::TcpBuilder</code> methods can be used in
+combination with the <code>TcpListener::from_listener</code> method to transfer
+ownership into mio.</p>
+</div><h4 id='method.from_listener' class='method'><span id='from_listener.v' class='invisible'><code>fn <a href='#method.from_listener' class='fnname'>from_listener</a>(listener: <a class='struct' href='https://doc.rust-lang.org/nightly/std/net/tcp/struct.TcpListener.html' title='std::net::tcp::TcpListener'>TcpListener</a>, addr: &amp;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a>&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new <code>TcpListener</code> from an instance of a
+<code>std::net::TcpListener</code> type.</p>
+
+<p>This function will set the <code>listener</code> provided into nonblocking mode on
+Unix, and otherwise the stream will just be wrapped up in an mio stream
+ready to accept new connections and become associated with an event
+loop.</p>
+
+<p>The address provided must be the address that the listener is bound to.</p>
+</div><h4 id='method.accept' class='method'><span id='accept.v' class='invisible'><code>fn <a href='#method.accept' class='fnname'>accept</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='../../mio/tcp/struct.TcpStream.html' title='mio::tcp::TcpStream'>TcpStream</a>, <a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>&gt;</code></span></h4>
+<div class='docblock'><p>Accepts a new <code>TcpStream</code>.</p>
+
+<p>Returns a <code>Ok(None)</code> when the socket <code>WOULDBLOCK</code>, this means the stream
+will be ready at a later point. If an accepted stream is returned, the
+address of the peer is returned along with it</p>
+</div><h4 id='method.local_addr' class='method'><span id='local_addr.v' class='invisible'><code>fn <a href='#method.local_addr' class='fnname'>local_addr</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>&gt;</code></span></h4>
+<div class='docblock'><p>Returns the local socket address of this listener.</p>
+</div><h4 id='method.try_clone' class='method'><span id='try_clone.v' class='invisible'><code>fn <a href='#method.try_clone' class='fnname'>try_clone</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a>&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new independently owned handle to the underlying socket.</p>
+
+<p>The returned <code>TcpListener</code> is a reference to the same socket that this
+object references. Both handles can be used to accept incoming
+connections and options set on one listener will affect the other.</p>
+</div><h4 id='method.set_ttl' class='method'><span id='set_ttl.v' class='invisible'><code>fn <a href='#method.set_ttl' class='fnname'>set_ttl</a>(&amp;self, ttl: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value for the <code>IP_TTL</code> option on this socket.</p>
+
+<p>This value sets the time-to-live field that is used in every packet sent
+from this socket.</p>
+</div><h4 id='method.ttl' class='method'><span id='ttl.v' class='invisible'><code>fn <a href='#method.ttl' class='fnname'>ttl</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>IP_TTL</code> option for this socket.</p>
+
+<p>For more information about this option, see <a href="#method.set_ttl"><code>set_ttl</code></a>.</p>
+</div><h4 id='method.set_only_v6' class='method'><span id='set_only_v6.v' class='invisible'><code>fn <a href='#method.set_only_v6' class='fnname'>set_only_v6</a>(&amp;self, only_v6: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value for the <code>IPV6_V6ONLY</code> option on this socket.</p>
+
+<p>If this is set to <code>true</code> then the socket is restricted to sending and
+receiving IPv6 packets only. In this case two IPv4 and IPv6 applications
+can bind the same port at the same time.</p>
+
+<p>If this is set to <code>false</code> then the socket can be used to send and
+receive packets from an IPv4-mapped IPv6 address.</p>
+</div><h4 id='method.only_v6' class='method'><span id='only_v6.v' class='invisible'><code>fn <a href='#method.only_v6' class='fnname'>only_v6</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>IPV6_V6ONLY</code> option for this socket.</p>
+
+<p>For more information about this option, see <a href="#method.set_only_v6"><code>set_only_v6</code></a>.</p>
+</div><h4 id='method.take_error' class='method'><span id='take_error.v' class='invisible'><code>fn <a href='#method.take_error' class='fnname'>take_error</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Get the value of the <code>SO_ERROR</code> option on this socket.</p>
+
+<p>This will retrieve the stored error in the underlying socket, clearing
+the field in the process. This can be useful for checking errors between
+calls.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-456' class='srclink' href='../../src/mio/net/tcp.rs.html#251' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../mio/trait.Evented.html' title='mio::Evented'>Evented</a> for <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-507' class='srclink' href='../../src/mio/net/tcp.rs.html#397-412' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.register' class='method'><span id='register.v' class='invisible'><code>fn <a href='../../mio/trait.Evented.html#tymethod.register' class='fnname'>register</a>(&amp;self, poll: &amp;<a class='struct' href='../../mio/struct.Poll.html' title='mio::Poll'>Poll</a>, token: <a class='struct' href='../../mio/struct.Token.html' title='mio::Token'>Token</a>, interest: <a class='struct' href='../../mio/struct.Ready.html' title='mio::Ready'>Ready</a>, opts: <a class='struct' href='../../mio/struct.PollOpt.html' title='mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.reregister' class='method'><span id='reregister.v' class='invisible'><code>fn <a href='../../mio/trait.Evented.html#tymethod.reregister' class='fnname'>reregister</a>(&amp;self, poll: &amp;<a class='struct' href='../../mio/struct.Poll.html' title='mio::Poll'>Poll</a>, token: <a class='struct' href='../../mio/struct.Token.html' title='mio::Token'>Token</a>, interest: <a class='struct' href='../../mio/struct.Ready.html' title='mio::Ready'>Ready</a>, opts: <a class='struct' href='../../mio/struct.PollOpt.html' title='mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.deregister' class='method'><span id='deregister.v' class='invisible'><code>fn <a href='../../mio/trait.Evented.html#tymethod.deregister' class='fnname'>deregister</a>(&amp;self, poll: &amp;<a class='struct' href='../../mio/struct.Poll.html' title='mio::Poll'>Poll</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+</div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.IntoRawFd.html' title='std::sys::ext::io::IntoRawFd'>IntoRawFd</a> for <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-535' class='srclink' href='../../src/mio/net/tcp.rs.html#448-452' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.into_raw_fd' class='method'><span id='into_raw_fd.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.IntoRawFd.html#tymethod.into_raw_fd' class='fnname'>into_raw_fd</a>(self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/type.RawFd.html' title='std::sys::ext::io::RawFd'>RawFd</a></code></span></h4>
+<div class='docblock'><p>Consumes this object, returning the raw underlying file descriptor. <a href="https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.IntoRawFd.html#tymethod.into_raw_fd">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawFd.html' title='std::sys::ext::io::AsRawFd'>AsRawFd</a> for <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-538' class='srclink' href='../../src/mio/net/tcp.rs.html#455-459' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.as_raw_fd' class='method'><span id='as_raw_fd.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawFd.html#tymethod.as_raw_fd' class='fnname'>as_raw_fd</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/type.RawFd.html' title='std::sys::ext::io::RawFd'>RawFd</a></code></span></h4>
+<div class='docblock'><p>Extracts the raw file descriptor. <a href="https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawFd.html#tymethod.as_raw_fd">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.FromRawFd.html' title='std::sys::ext::io::FromRawFd'>FromRawFd</a> for <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-541' class='srclink' href='../../src/mio/net/tcp.rs.html#462-469' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.from_raw_fd' class='method'><span id='from_raw_fd.v' class='invisible'><code>unsafe fn <a href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.FromRawFd.html#tymethod.from_raw_fd' class='fnname'>from_raw_fd</a>(fd: <a class='type' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/type.RawFd.html' title='std::sys::ext::io::RawFd'>RawFd</a>) -&gt; <a class='struct' href='../../mio/tcp/struct.TcpListener.html' title='mio::tcp::TcpListener'>TcpListener</a></code></span></h4>
+<div class='docblock'><p>Constructs a new instances of <code>Self</code> from the given raw file descriptor. <a href="https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.FromRawFd.html#tymethod.from_raw_fd">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "mio";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

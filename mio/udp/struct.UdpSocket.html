@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `UdpSocket` struct in crate `mio`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, UdpSocket">
+
+    <title>mio::udp::UdpSocket - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>mio</a>::<wbr><a href='index.html'>udp</a></p><script>window.sidebarCurrent = {name: 'UdpSocket', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>mio</a>::<wbr><a href='index.html'>udp</a>::<wbr><a class='struct' href=''>UdpSocket</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-548' class='srclink' href='../../src/mio/net/udp.rs.html#8-11' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct UdpSocket { /* fields omitted */ }</pre><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-558' class='srclink' href='../../src/mio/net/udp.rs.html#13-222' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.bind' class='method'><span id='bind.v' class='invisible'><code>fn <a href='#method.bind' class='fnname'>bind</a>(addr: &amp;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a>&gt;</code></span></h4>
+<div class='docblock'><p>Creates a UDP socket from the given address.</p>
+</div><h4 id='method.from_socket' class='method'><span id='from_socket.v' class='invisible'><code>fn <a href='#method.from_socket' class='fnname'>from_socket</a>(socket: <a class='struct' href='https://doc.rust-lang.org/nightly/std/net/udp/struct.UdpSocket.html' title='std::net::udp::UdpSocket'>UdpSocket</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a>&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new mio-wrapped socket from an underlying and bound std
+socket.</p>
+
+<p>This function requires that <code>socket</code> has previously been bound to an
+address to work correctly, and returns an I/O object which can be used
+with mio to send/receive UDP messages.</p>
+
+<p>This can be used in conjunction with net2&#39;s <code>UdpBuilder</code> interface to
+configure a socket before it&#39;s handed off to mio, such as setting
+options like <code>reuse_address</code> or binding to multiple addresses.</p>
+</div><h4 id='method.local_addr' class='method'><span id='local_addr.v' class='invisible'><code>fn <a href='#method.local_addr' class='fnname'>local_addr</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>&gt;</code></span></h4>
+<div class='docblock'><p>Returns the socket address that this socket was created from.</p>
+</div><h4 id='method.try_clone' class='method'><span id='try_clone.v' class='invisible'><code>fn <a href='#method.try_clone' class='fnname'>try_clone</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a>&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new independently owned handle to the underlying socket.</p>
+
+<p>The returned <code>UdpSocket</code> is a reference to the same socket that this
+object references. Both handles will read and write the same port, and
+options set on one socket will be propagated to the other.</p>
+</div><h4 id='method.send_to' class='method'><span id='send_to.v' class='invisible'><code>fn <a href='#method.send_to' class='fnname'>send_to</a>(&amp;self, buf: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, target: &amp;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Sends data on the socket to the given address. On success, returns the
+number of bytes written.</p>
+
+<p>Address type can be any implementor of <code>ToSocketAddrs</code> trait. See its
+documentation for concrete examples.</p>
+</div><h4 id='method.recv_from' class='method'><span id='recv_from.v' class='invisible'><code>fn <a href='#method.recv_from' class='fnname'>recv_from</a>(&amp;self, buf: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;mut [</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>, <a class='enum' href='https://doc.rust-lang.org/nightly/std/net/addr/enum.SocketAddr.html' title='std::net::addr::SocketAddr'>SocketAddr</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Receives data from the socket. On success, returns the number of bytes
+read and the address from whence the data came.</p>
+</div><h4 id='method.broadcast' class='method'><span id='broadcast.v' class='invisible'><code>fn <a href='#method.broadcast' class='fnname'>broadcast</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>SO_BROADCAST</code> option for this socket.</p>
+
+<p>For more information about this option, see
+<a href="#method.set_broadcast"><code>set_broadcast</code></a>.</p>
+</div><h4 id='method.set_broadcast' class='method'><span id='set_broadcast.v' class='invisible'><code>fn <a href='#method.set_broadcast' class='fnname'>set_broadcast</a>(&amp;self, on: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value of the <code>SO_BROADCAST</code> option for this socket.</p>
+
+<p>When enabled, this socket is allowed to send packets to a broadcast
+address.</p>
+</div><h4 id='method.multicast_loop_v4' class='method'><span id='multicast_loop_v4.v' class='invisible'><code>fn <a href='#method.multicast_loop_v4' class='fnname'>multicast_loop_v4</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>IP_MULTICAST_LOOP</code> option for this socket.</p>
+
+<p>For more information about this option, see
+<a href="#method.set_multicast_loop_v4"><code>set_multicast_loop_v4</code></a>.</p>
+</div><h4 id='method.set_multicast_loop_v4' class='method'><span id='set_multicast_loop_v4.v' class='invisible'><code>fn <a href='#method.set_multicast_loop_v4' class='fnname'>set_multicast_loop_v4</a>(&amp;self, on: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value of the <code>IP_MULTICAST_LOOP</code> option for this socket.</p>
+
+<p>If enabled, multicast packets will be looped back to the local socket.
+Note that this may not have any affect on IPv6 sockets.</p>
+</div><h4 id='method.multicast_ttl_v4' class='method'><span id='multicast_ttl_v4.v' class='invisible'><code>fn <a href='#method.multicast_ttl_v4' class='fnname'>multicast_ttl_v4</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>IP_MULTICAST_TTL</code> option for this socket.</p>
+
+<p>For more information about this option, see
+<a href="#method.set_multicast_ttl_v4"><code>set_multicast_ttl_v4</code></a>.</p>
+</div><h4 id='method.set_multicast_ttl_v4' class='method'><span id='set_multicast_ttl_v4.v' class='invisible'><code>fn <a href='#method.set_multicast_ttl_v4' class='fnname'>set_multicast_ttl_v4</a>(&amp;self, ttl: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value of the <code>IP_MULTICAST_TTL</code> option for this socket.</p>
+
+<p>Indicates the time-to-live value of outgoing multicast packets for
+this socket. The default value is 1 which means that multicast packets
+don&#39;t leave the local network unless explicitly requested.</p>
+
+<p>Note that this may not have any affect on IPv6 sockets.</p>
+</div><h4 id='method.multicast_loop_v6' class='method'><span id='multicast_loop_v6.v' class='invisible'><code>fn <a href='#method.multicast_loop_v6' class='fnname'>multicast_loop_v6</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>IPV6_MULTICAST_LOOP</code> option for this socket.</p>
+
+<p>For more information about this option, see
+<a href="#method.set_multicast_loop_v6"><code>set_multicast_loop_v6</code></a>.</p>
+</div><h4 id='method.set_multicast_loop_v6' class='method'><span id='set_multicast_loop_v6.v' class='invisible'><code>fn <a href='#method.set_multicast_loop_v6' class='fnname'>set_multicast_loop_v6</a>(&amp;self, on: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value of the <code>IPV6_MULTICAST_LOOP</code> option for this socket.</p>
+
+<p>Controls whether this socket sees the multicast packets it sends itself.
+Note that this may not have any affect on IPv4 sockets.</p>
+</div><h4 id='method.ttl' class='method'><span id='ttl.v' class='invisible'><code>fn <a href='#method.ttl' class='fnname'>ttl</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;</code></span></h4>
+<div class='docblock'><p>Gets the value of the <code>IP_TTL</code> option for this socket.</p>
+
+<p>For more information about this option, see <a href="#method.set_ttl"><code>set_ttl</code></a>.</p>
+</div><h4 id='method.set_ttl' class='method'><span id='set_ttl.v' class='invisible'><code>fn <a href='#method.set_ttl' class='fnname'>set_ttl</a>(&amp;self, ttl: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the value for the <code>IP_TTL</code> option on this socket.</p>
+
+<p>This value sets the time-to-live field that is used in every packet sent
+from this socket.</p>
+</div><h4 id='method.join_multicast_v4' class='method'><span id='join_multicast_v4.v' class='invisible'><code>fn <a href='#method.join_multicast_v4' class='fnname'>join_multicast_v4</a>(&amp;self, multiaddr: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/net/ip/struct.Ipv4Addr.html' title='std::net::ip::Ipv4Addr'>Ipv4Addr</a>, interface: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/net/ip/struct.Ipv4Addr.html' title='std::net::ip::Ipv4Addr'>Ipv4Addr</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Executes an operation of the <code>IP_ADD_MEMBERSHIP</code> type.</p>
+
+<p>This function specifies a new multicast group for this socket to join.
+The address must be a valid multicast address, and <code>interface</code> is the
+address of the local interface with which the system should join the
+multicast group. If it&#39;s equal to <code>INADDR_ANY</code> then an appropriate
+interface is chosen by the system.</p>
+</div><h4 id='method.join_multicast_v6' class='method'><span id='join_multicast_v6.v' class='invisible'><code>fn <a href='#method.join_multicast_v6' class='fnname'>join_multicast_v6</a>(&amp;self, multiaddr: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/net/ip/struct.Ipv6Addr.html' title='std::net::ip::Ipv6Addr'>Ipv6Addr</a>, interface: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Executes an operation of the <code>IPV6_ADD_MEMBERSHIP</code> type.</p>
+
+<p>This function specifies a new multicast group for this socket to join.
+The address must be a valid multicast address, and <code>interface</code> is the
+index of the interface to join/leave (or 0 to indicate any interface).</p>
+</div><h4 id='method.leave_multicast_v4' class='method'><span id='leave_multicast_v4.v' class='invisible'><code>fn <a href='#method.leave_multicast_v4' class='fnname'>leave_multicast_v4</a>(&amp;self, multiaddr: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/net/ip/struct.Ipv4Addr.html' title='std::net::ip::Ipv4Addr'>Ipv4Addr</a>, interface: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/net/ip/struct.Ipv4Addr.html' title='std::net::ip::Ipv4Addr'>Ipv4Addr</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Executes an operation of the <code>IP_DROP_MEMBERSHIP</code> type.</p>
+
+<p>For more information about this option, see
+<a href="#method.join_multicast_v4"><code>join_multicast_v4</code></a>.</p>
+</div><h4 id='method.leave_multicast_v6' class='method'><span id='leave_multicast_v6.v' class='invisible'><code>fn <a href='#method.leave_multicast_v6' class='fnname'>leave_multicast_v6</a>(&amp;self, multiaddr: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/net/ip/struct.Ipv6Addr.html' title='std::net::ip::Ipv6Addr'>Ipv6Addr</a>, interface: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Executes an operation of the <code>IPV6_DROP_MEMBERSHIP</code> type.</p>
+
+<p>For more information about this option, see
+<a href="#method.join_multicast_v6"><code>join_multicast_v6</code></a>.</p>
+</div><h4 id='method.take_error' class='method'><span id='take_error.v' class='invisible'><code>fn <a href='#method.take_error' class='fnname'>take_error</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Get the value of the <code>SO_ERROR</code> option on this socket.</p>
+
+<p>This will retrieve the stored error in the underlying socket, clearing
+the field in the process. This can be useful for checking errors between
+calls.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-551' class='srclink' href='../../src/mio/net/udp.rs.html#7' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../mio/trait.Evented.html' title='mio::Evented'>Evented</a> for <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-624' class='srclink' href='../../src/mio/net/udp.rs.html#224-237' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.register' class='method'><span id='register.v' class='invisible'><code>fn <a href='../../mio/trait.Evented.html#tymethod.register' class='fnname'>register</a>(&amp;self, poll: &amp;<a class='struct' href='../../mio/struct.Poll.html' title='mio::Poll'>Poll</a>, token: <a class='struct' href='../../mio/struct.Token.html' title='mio::Token'>Token</a>, interest: <a class='struct' href='../../mio/struct.Ready.html' title='mio::Ready'>Ready</a>, opts: <a class='struct' href='../../mio/struct.PollOpt.html' title='mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.reregister' class='method'><span id='reregister.v' class='invisible'><code>fn <a href='../../mio/trait.Evented.html#tymethod.reregister' class='fnname'>reregister</a>(&amp;self, poll: &amp;<a class='struct' href='../../mio/struct.Poll.html' title='mio::Poll'>Poll</a>, token: <a class='struct' href='../../mio/struct.Token.html' title='mio::Token'>Token</a>, interest: <a class='struct' href='../../mio/struct.Ready.html' title='mio::Ready'>Ready</a>, opts: <a class='struct' href='../../mio/struct.PollOpt.html' title='mio::PollOpt'>PollOpt</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<h4 id='method.deregister' class='method'><span id='deregister.v' class='invisible'><code>fn <a href='../../mio/trait.Evented.html#tymethod.deregister' class='fnname'>deregister</a>(&amp;self, poll: &amp;<a class='struct' href='../../mio/struct.Poll.html' title='mio::Poll'>Poll</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+</div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.IntoRawFd.html' title='std::sys::ext::io::IntoRawFd'>IntoRawFd</a> for <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-643' class='srclink' href='../../src/mio/net/udp.rs.html#249-253' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.into_raw_fd' class='method'><span id='into_raw_fd.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.IntoRawFd.html#tymethod.into_raw_fd' class='fnname'>into_raw_fd</a>(self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/type.RawFd.html' title='std::sys::ext::io::RawFd'>RawFd</a></code></span></h4>
+<div class='docblock'><p>Consumes this object, returning the raw underlying file descriptor. <a href="https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.IntoRawFd.html#tymethod.into_raw_fd">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawFd.html' title='std::sys::ext::io::AsRawFd'>AsRawFd</a> for <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-646' class='srclink' href='../../src/mio/net/udp.rs.html#256-260' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.as_raw_fd' class='method'><span id='as_raw_fd.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawFd.html#tymethod.as_raw_fd' class='fnname'>as_raw_fd</a>(&amp;self) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/type.RawFd.html' title='std::sys::ext::io::RawFd'>RawFd</a></code></span></h4>
+<div class='docblock'><p>Extracts the raw file descriptor. <a href="https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.AsRawFd.html#tymethod.as_raw_fd">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.FromRawFd.html' title='std::sys::ext::io::FromRawFd'>FromRawFd</a> for <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-649' class='srclink' href='../../src/mio/net/udp.rs.html#263-270' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.from_raw_fd' class='method'><span id='from_raw_fd.v' class='invisible'><code>unsafe fn <a href='https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.FromRawFd.html#tymethod.from_raw_fd' class='fnname'>from_raw_fd</a>(fd: <a class='type' href='https://doc.rust-lang.org/nightly/std/sys/ext/io/type.RawFd.html' title='std::sys::ext::io::RawFd'>RawFd</a>) -&gt; <a class='struct' href='../../mio/udp/struct.UdpSocket.html' title='mio::udp::UdpSocket'>UdpSocket</a></code></span></h4>
+<div class='docblock'><p>Constructs a new instances of <code>Self</code> from the given raw file descriptor. <a href="https://doc.rust-lang.org/nightly/std/sys/ext/io/trait.FromRawFd.html#tymethod.from_raw_fd">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "mio";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

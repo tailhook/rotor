@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Machine` trait in crate `rotor`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Machine">
+
+    <title>rotor::Machine - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>rotor</a></p><script>window.sidebarCurrent = {name: 'Machine', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='index.html'>rotor</a>::<wbr><a class='trait' href=''>Machine</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-632' class='srclink' href='../src/rotor/src/machine.rs.html#7-77' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait Machine: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a> {
+    type <a href='#associatedtype.Context' class='type'>Context</a>;
+    type <a href='#associatedtype.Seed' class='type'>Seed</a>: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a>;
+    fn <a href='#tymethod.create' class='fnname'>create</a>(seed: Self::Seed, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;<a class='enum' href='../rotor/void/enum.Void.html' title='rotor::void::Void'>Void</a>&gt;;
+    fn <a href='#tymethod.ready' class='fnname'>ready</a>(self, events: <a class='struct' href='../rotor/mio/struct.Ready.html' title='rotor::mio::Ready'>EventSet</a>, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;;
+    fn <a href='#tymethod.spawned' class='fnname'>spawned</a>(self, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;;
+    fn <a href='#tymethod.timeout' class='fnname'>timeout</a>(self, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;;
+    fn <a href='#tymethod.wakeup' class='fnname'>wakeup</a>(self, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;;
+
+    fn <a href='#method.spawn_error' class='fnname'>spawn_error</a>(self, _scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;, error: <a class='enum' href='../rotor/enum.SpawnError.html' title='rotor::SpawnError'>SpawnError</a>&lt;Self::Seed&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt; { ... }
+}</pre><div class='docblock'><p>A trait that every state machine in the loop must implement</p>
+</div>
+            <h2 id='associated-types'>Associated Types</h2>
+            <div class='methods'>
+        <h3 id='associatedtype.Context' class='method stab '><span id='Context.t' class='invisible'><code>type <a href='#associatedtype.Context' class='type'>Context</a></code></span></h3><div class='docblock'><p>Context type for the state machine</p>
+
+<p>This is a container of the global state for the application</p>
+</div><h3 id='associatedtype.Seed' class='method stab '><span id='Seed.t' class='invisible'><code>type <a href='#associatedtype.Seed' class='type'>Seed</a>: <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Sized.html' title='core::marker::Sized'>Sized</a></code></span></h3><div class='docblock'><p>Seed is piece of data that is needed to initialize the machine</p>
+
+<p>It needs Any because it&#39;s put into Box<Error> object when state machine
+is failed to create. Hopefully this is not huge limitation.</p>
+
+<p>Note: this is only used to create machines returned by this machine.
+So unless this machine processses accepting socket this should
+probably be Void.</p>
+</div></div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.create' class='method stab '><span id='create.v' class='invisible'><code>fn <a href='#tymethod.create' class='fnname'>create</a>(seed: Self::Seed, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;<a class='enum' href='../rotor/void/enum.Void.html' title='rotor::void::Void'>Void</a>&gt;</code></span></h3><div class='docblock'><p>Create a machine from some data</p>
+
+<p>The error should be rare enough so that Box<Error> overhead
+is negligible. Most errors here should be resource exhaustion, like
+there are no slots in Slab or system limit on epoll watches exceeded.</p>
+
+<p>Note: this method is used internally (by event loop) to create a
+socket from a Seed returned by this machine. This method should
+<strong>not</strong> be used to create machine by external code. Create a
+machine-specific <code>Type::new</code> method for the purpose.</p>
+
+<p>Note: we don&#39;t support spawning more state machines in create handler</p>
+</div><h3 id='tymethod.ready' class='method stab '><span id='ready.v' class='invisible'><code>fn <a href='#tymethod.ready' class='fnname'>ready</a>(self, events: <a class='struct' href='../rotor/mio/struct.Ready.html' title='rotor::mio::Ready'>EventSet</a>, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;</code></span></h3><div class='docblock'><p>Socket readiness notification</p>
+</div><h3 id='tymethod.spawned' class='method stab '><span id='spawned.v' class='invisible'><code>fn <a href='#tymethod.spawned' class='fnname'>spawned</a>(self, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;</code></span></h3><div class='docblock'><p>Called after spawn event</p>
+
+<p>This is mostly a continuation event. I.e. when you accept a socket
+and return a new state machine from <code>ready()</code>. You may wish to accept
+another socket right now. This is what <code>spawned</code> event is for.</p>
+</div><h3 id='tymethod.timeout' class='method stab '><span id='timeout.v' class='invisible'><code>fn <a href='#tymethod.timeout' class='fnname'>timeout</a>(self, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;</code></span></h3><div class='docblock'><p>Timeout happened</p>
+</div><h3 id='tymethod.wakeup' class='method stab '><span id='wakeup.v' class='invisible'><code>fn <a href='#tymethod.wakeup' class='fnname'>wakeup</a>(self, scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;</code></span></h3><div class='docblock'><p>Message received</p>
+
+<p>Note the spurious wakeups are possible, because messages are
+asynchronous, and state machine is identified by token.
+Tokens are reused quickly.</p>
+
+<p>So never make this <code>unreachable!()</code> or <code>unimplemented!()</code></p>
+</div></div>
+            <h2 id='provided-methods'>Provided Methods</h2>
+            <div class='methods'>
+        <h3 id='method.spawn_error' class='method stab '><span id='spawn_error.v' class='invisible'><code>fn <a href='#method.spawn_error' class='fnname'>spawn_error</a>(self, _scope: &amp;mut <a class='struct' href='../rotor/struct.Scope.html' title='rotor::Scope'>Scope</a>&lt;Self::Context&gt;, error: <a class='enum' href='../rotor/enum.SpawnError.html' title='rotor::SpawnError'>SpawnError</a>&lt;Self::Seed&gt;) -&gt; <a class='struct' href='../rotor/struct.Response.html' title='rotor::Response'>Response</a>&lt;Self,&nbsp;Self::Seed&gt;</code></span></h3><div class='docblock'><p>Called instead of spawned, if there is no slab space</p>
+
+<p>For example, in <code>accept</code> handler you might want to put the thing
+into temporary storage, stop accepting and wait until slot is empty
+again.</p>
+
+<p>Note: it&#39;s useless to spawn from here if the failure was , it almost certainly will fail
+again, but may use a timeout</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl&lt;X,&nbsp;AA,&nbsp;BB&gt; Machine for <a class='enum' href='../rotor/enum.Compose2.html' title='rotor::Compose2'>Compose2</a>&lt;AA,&nbsp;BB&gt; <span class='where'>where AA: <a class='trait' href='../rotor/trait.Machine.html' title='rotor::Machine'>Machine</a>&lt;Context=X&gt;, BB: <a class='trait' href='../rotor/trait.Machine.html' title='rotor::Machine'>Machine</a>&lt;Context=X&gt;</span></code></li>
+</ul><script type="text/javascript" async
+                         src="../implementors/rotor/trait.Machine.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "rotor";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
